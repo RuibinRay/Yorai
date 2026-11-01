@@ -1,0 +1,58 @@
+/* YORAI design tokens. Every text/background pair in :root is checked by tests/contrast.mjs. */
+:root {
+  /* Surfaces */
+  --espresso: #120c09;      /* page background, dark */
+  --espresso-2: #1c1410;    /* raised dark surface */
+  --espresso-3: #2a1f18;    /* borders on dark */
+  --paper: #f3ebe0;         /* page background, light */
+  --paper-2: #e9ddcc;       /* raised light surface */
+  --paper-3: #d9c9b2;       /* borders on light */
+
+  /* Ink on paper */
+  --ink: #1a120d;
+  --ink-muted: #665649;     /* 6.0:1 on paper */
+  --brass-ink: #7a5620;     /* links and accents on paper, 5.6:1 */
+  --cherry-ink: #9f2f2b;    /* status/bad on paper */
+
+  /* Ink on espresso */
+  --cream: #f3ebe0;
+  --cream-muted: #c4b5a5;   /* 9.5:1 on espresso */
+  --crema: #e8c88a;         /* accent text on dark, 10:1 */
+  --brass: #c4985a;         /* decorative rules on dark, 6.4:1 */
+  --cherry: #e0564f;        /* large text / marks on dark only */
+  --mist: #a7bdb8;
+
+  /* Journey accent, interpolated by the driver as the chapters warm up */
+  --accent: #a7bdb8;
+  --accent-ink: #1a120d;
+
+  /* Type */
+  --font-display: 'Newsreader Display', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --font-text: 'Newsreader Text', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --font-ui: 'Hanken Grotesk Variable', 'Helvetica Neue', Arial, system-ui, sans-serif;
+  --t-xs: 0.72rem;
+  --t-sm: 0.86rem;
+  --t-base: clamp(1rem, 0.94rem + 0.3vw, 1.15rem);
+  --t-lg: clamp(1.25rem, 1.1rem + 0.7vw, 1.6rem);
+  --t-xl: clamp(1.9rem, 1.3rem + 2.4vw, 3.6rem);
+  --t-xxl: clamp(2.6rem, 1.6rem + 4.6vw, 6rem);
+  --t-display: clamp(3.4rem, 1rem + 11vw, 11rem);
+  --lh-tight: 1.02;
+  --lh-text: 1.55;
+  --track-ui: 0.16em;
+
+  /* Space & shape */
+  --s-1: 0.25rem; --s-2: 0.5rem; --s-3: 0.75rem; --s-4: 1rem; --s-5: 1.5rem;
+  --s-6: 2rem; --s-7: 3rem; --s-8: 4.5rem; --s-9: 7rem; --s-10: 10rem;
+  --gutter: clamp(1rem, 4vw, 4rem);
+  --measure: 46ch;
+  --radius: 2px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 180ms;
+  --dur: 420ms;
+  --dur-slow: 900ms;
+  --m: 1; /* motion multiplier; 0 under calm motion */
+}

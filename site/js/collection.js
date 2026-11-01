@@ -1,0 +1,108 @@
+import { COLLECTION, BRAND } from '../data/content.js?v=1';
+import { validate, isEmail, mailto, copyText } from './forms.js?v=1';
+
+/* A bag drawn in code: one gradient per bag, label ink from the data. */
+function bagSVG(b) {
+  const id = 'g-' + b.id;
+  return `
+  <svg viewBox="0 0 300 420" role="img" aria-label="${b.name} bag, ${b.process} process">
+    <defs>
+      <linearGradient id="${id}" x1="0" x2="1" y1="0" y2="0">
+        <stop offset="0" stop-color="${b.hue}" stop-opacity="0.82"/>
+        <stop offset="0.45" stop-color="${b.hue}"/>
+        <stop offset="1" stop-color="${b.hue}" stop-opacity="0.72"/>
+      </linearGradient>
+      <linearGradient id="${id}-s" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stop-color="#000" stop-opacity="0.18"/>
+        <stop offset="0.12" stop-color="#000" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <path d="M36 70 Q36 52 54 50 L246 50 Q264 52 264 70 L270 390 Q270 406 254 406 L46 406 Q30 406 30 390 Z" fill="url(#${id})"/>
+    <path d="M36 70 Q36 52 54 50 L246 50 Q264 52 264 70 L270 390 Q270 406 254 406 L46 406 Q30 406 30 390 Z" fill="url(#${id}-s)"/>
+    <path d="M54 50 L246 50 L240 34 Q150 22 60 34 Z" fill="${b.hue}" opacity="0.9"/>
+    <path d="M60 34 Q150 22 240 34" fill="none" stroke="${b.ink}" stroke-opacity="0.35" stroke-width="2"/>
+    <rect x="128" y="24" width="44" height="6" rx="3" fill="#c4985a"/>
+    <g fill="${b.ink}" font-family="Hanken Grotesk Variable, Arial, sans-serif">
+      <text x="150" y="128" text-anchor="middle" font-family="Newsreader Display, Georgia, serif" font-size="44" letter-spacing="10" font-weight="500">YORAI</text>
+      <text x="150" y="150" text-anchor="middle" font-size="11" letter-spacing="3.5">CAFÉ DE ALTURA · TARRAZÚ</text>
+      <line x1="90" y1="178" x2="210" y2="178" stroke="${b.ink}" stroke-width="1" opacity="0.5"/>
+      <text x="150" y="226" text-anchor="middle" font-family="Newsreader Display, Georgia, serif" font-size="30" font-style="italic">${b.name}</text>
+      <text x="150" y="252" text-anchor="middle" font-size="12" letter-spacing="3">${b.process.toUpperCase()} · ${b.variety.toUpperCase()}</text>
+      <text x="150" y="272" text-anchor="middle" font-size="12" letter-spacing="2" opacity="0.8">${b.altitude}</text>
+      <line x1="90" y1="300" x2="210" y2="300" stroke="${b.ink}" stroke-width="1" opacity="0.5"/>
+      <text x="150" y="332" text-anchor="middle" font-size="12" font-style="italic" font-family="Newsreader Display, Georgia, serif" font-size="15">${b.notes}</text>
+      <text x="150" y="376" text-anchor="middle" font-size="10" letter-spacing="2.5" opacity="0.75">${b.sizes[0].g} G · ROAST: ${b.roast.toUpperCase()}</text>
+    </g>
+  </svg>`;
+}
+
+export function renderCollection() {
+  const row = document.getElementById('colRow');
+  row.innerHTML = COLLECTION.map((b) => `
+    <article class="col__card rv" data-id="${b.id}">
+      <div class="col__bag">${bagSVG(b)}</div>
+      <div>
+        <h3 class="col__name">${b.name}</h3>
+        <p class="col__sub">${b.process} · ${b.variety} · ${b.altitude}</p>
+      </div>
+      <p class="col__notes">${b.notes}</p>
+      <p class="col__from">From ${b.sizes[0].price} USD · ${b.sizes.map((s) => s.g + ' g').join(', ')}</p>
+      <div class="col__cta"><button class="btn btn--ghost" type="button" data-reserve="${b.id}">Reserve</button></div>
+    </article>`).join('');
+
+  /* Reserve dialog */
+  const dlg = document.getElementById('reserveDlg');
+  const title = document.getElementById('reserveTitle');
+  const sizes = document.getElementById('reserveSizes');
+  const form = document.getElementById('reserveForm');
+  const status = document.getElementById('reserveStatus');
+  let current = null, opener = null;
+
+  row.querySelectorAll('[data-reserve]').forEach((btn) => btn.addEventListener('click', () => {
+    current = COLLECTION.find((b) => b.id === btn.dataset.reserve);
+    opener = btn;
+    title.textContent = current.name;
+    sizes.innerHTML = current.sizes.map((s, i) => `
+      <label><input type="radio" name="size" value="${s.g}" ${i === 0 ? 'checked' : ''}> ${s.g} g · ${s.price} USD</label>`).join('');
+    status.textContent = ''; status.className = 'frm__status';
+    form.reset();
+    sizes.querySelector('input').checked = true;
+    dlg.showModal();
+  }));
+  document.getElementById('reserveClose').addEventListener('click', () => dlg.close());
+  dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+  dlg.addEventListener('close', () => { opener?.focus(); });
+
+  function summary() {
+    const g = form.size.value;
+    const size = current.sizes.find((s) => String(s.g) === g);
+    const qty = Number(form.qty.value);
+    return [
+      `Reservation — ${current.name} (${current.process}, ${current.variety}, ${current.altitude})`,
+      `Size: ${size.g} g at ${size.price} USD`,
+      `Bags: ${qty}`,
+      `Total to confirm: ${size.price * qty} USD`,
+      `Name: ${form.name.value.trim()}`,
+      `Email: ${form.email.value.trim()}`,
+    ].join('\n');
+  }
+  const fields = () => [
+    { input: form.name, err: document.getElementById('rNameErr'), test: (v) => v.length >= 2, message: 'Please give us a name.' },
+    { input: form.email, err: document.getElementById('rEmailErr'), test: isEmail, message: 'That email address doesn’t look complete.' },
+    { input: form.qty, err: document.getElementById('rQtyErr'), test: (v) => /^\d+$/.test(v) && +v >= 1 && +v <= 12, message: 'Between 1 and 12 bags, please.' },
+  ];
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!validate(fields())) return;
+    const text = summary();
+    location.href = mailto(BRAND.email, `Reservation: ${current.name}`, text);
+    status.textContent = 'Your email app should open with the reservation. If it doesn’t, use “Copy summary” and send it to ' + BRAND.email + '.';
+    status.className = 'frm__status frm__status--ok';
+  });
+  document.getElementById('reserveCopy').addEventListener('click', async () => {
+    if (!validate(fields())) return;
+    const ok = await copyText(summary());
+    status.textContent = ok ? 'Summary copied. Paste it into an email to ' + BRAND.email + '.' : 'Copying isn’t available here; the summary is: ' + summary().replaceAll('\n', ' · ');
+    status.className = 'frm__status' + (ok ? ' frm__status--ok' : '');
+  });
+}

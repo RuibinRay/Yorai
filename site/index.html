@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>YORAI — Café de altura, Costa Rica</title>
+  <meta name="description" content="YORAI is a family coffee farm, micro-mill and tasting room in Tarrazú, Costa Rica. Follow the coffee from the mist of the plantation to the cup.">
+  <meta name="theme-color" content="#0f1a1c">
+  <meta property="og:title" content="YORAI — Café de altura, Costa Rica">
+  <meta property="og:description" content="From the mist of a volcanic plantation to the cup: a scroll-driven journey through harvest, mill, roast and pour.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://ruibinray.github.io/Yorai/assets/og.jpg">
+  <link rel="canonical" href="https://ruibinray.github.io/Yorai/">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="fonts/newsreader-display.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/hanken-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/tokens.css?v=1">
+  <link rel="stylesheet" href="css/site.css?v=1">
+  <script type="importmap">{ "imports": { "three": "./vendor/three.module.js" } }</script>
+  <script src="vendor/gsap.min.js" defer></script>
+  <script src="vendor/ScrollTrigger.min.js" defer></script>
+  <script type="module" src="js/main.js?v=1"></script>
+</head>
+<body>
+  <a class="skip" href="#menu">Skip the journey, go to the menu</a>
+
+  <header class="hdr" id="hdr">
+    <a class="hdr__brand" href="#top">
+      <span class="hdr__word">YORAI</span>
+      <span class="hdr__tag">Café de altura · Costa Rica</span>
+    </a>
+    <nav class="hdr__nav" aria-label="Site">
+      <a href="#journey">Journey</a>
+      <a href="#menu">Menu</a>
+      <a href="#collection">Collection</a>
+      <a href="#story">Story</a>
+      <a href="#origins">Origins</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <div class="hdr__tools">
+      <button class="hdr__motion" id="motionToggle" type="button" aria-pressed="true" title="Motion on or off">
+        <span class="hdr__dot" aria-hidden="true"></span><span>Motion</span>
+      </button>
+      <button class="hdr__menu" id="menuOpen" type="button" aria-haspopup="dialog" aria-controls="navSheet">Menu</button>
+    </div>
+  </header>
+
+  <dialog class="nav-sheet" id="navSheet" aria-label="Site navigation">
+    <div class="nav-sheet__in">
+      <button class="nav-sheet__close btn btn--ghost" type="button" id="menuClose">Close</button>
+      <a href="#journey">Journey</a>
+      <a href="#menu">Menu</a>
+      <a href="#collection">Collection</a>
+      <a href="#story">Story</a>
+      <a href="#origins">Origins</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </dialog>
+
+  <main id="top">
+    <!-- ================= THE JOURNEY ================= -->
+    <section class="jr" id="journey" aria-label="The journey from mist to cup">
+      <div class="jr__stage" id="stage">
+        <div class="jr__still" id="still" aria-hidden="true">
+          <div class="jr__still-ch jr__still-ch--0 is-on"></div>
+          <div class="jr__still-ch jr__still-ch--1"></div>
+          <div class="jr__still-ch jr__still-ch--2"></div>
+          <div class="jr__still-ch jr__still-ch--3"></div>
+          <div class="jr__still-ch jr__still-ch--4"></div>
+          <div class="jr__still-ch jr__still-ch--5"></div>
+        </div>
+        <div class="jr__canvas" id="canvasHost" aria-hidden="true"></div>
+        <div class="jr__vignette" aria-hidden="true"></div>
+        <div class="jr__progress" aria-hidden="true"></div>
+
+        <div class="jr__hero" id="hero" data-chapter="0">
+          <div>
+            <p class="kicker">Tarrazú · Costa Rica</p>
+            <h1>YORAI<em>from mist to cup</em></h1>
+          </div>
+        </div>
+        <p class="jr__scrollcue" id="scrollcue" aria-hidden="true"><i></i><span>Scroll</span></p>
+
+        <div id="copies"></div>
+
+        <nav class="jr__rail" id="rail" aria-label="Chapters"></nav>
+        <button class="jr__pause btn btn--ghost" id="pause" type="button" aria-pressed="false" hidden>Pause scene</button>
+      </div>
+      <div id="spaces"></div>
+    </section>
+
+    <p class="motion-notice" id="motionNotice" role="status" hidden>
+      <span>Your system asks for reduced motion, so the journey is shown as still scenes.</span>
+      <button class="btn" type="button" id="motionOn">Turn the motion on</button>
+      <button class="btn btn--ghost" type="button" id="motionKeep">Keep it still</button>
+    </p>
+
+    <!-- ================= MENU ================= -->
+    <section class="sec sec--paper on-paper cup" id="menu" aria-labelledby="menuTitle">
+      <div class="sec__head">
+        <p class="kicker rv">The cupping table</p>
+        <h2 id="menuTitle" class="rv">Eight coffees, brewed to order</h2>
+        <p class="rv">Everything on the table is grown, milled and roasted at the farm. Pour-overs are brewed to order at 94 °C; the espresso is a honey-process blend of two lots.</p>
+      </div>
+      <div class="cup__grid">
+        <div class="cup__aside">
+          <div>
+            <p class="kicker">Filter by process</p>
+            <div class="cup__filters" id="cupFilters" role="group" aria-label="Filter by process"></div>
+          </div>
+          <p class="cup__count" aria-live="polite" id="cupCount"></p>
+          <p class="cup__legend">Prices in US dollars, tasting room only. Ask for the lot card at the counter for the harvest week.</p>
+        </div>
+        <div>
+          <ul class="cup__list" id="cupList"></ul>
+          <p class="cup__empty" id="cupEmpty" hidden>Nothing from that process is on the table this week.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= COLLECTION ================= -->
+    <section class="sec sec--dark col" id="collection" aria-labelledby="colTitle">
+      <div class="sec__head">
+        <p class="kicker rv">The collection</p>
+        <h2 id="colTitle" class="rv">Four bags, each from one slope</h2>
+        <p class="rv">Roasted on Mondays and shipped the same week. Reserve a bag and we confirm by email with the roast date before anything is charged.</p>
+      </div>
+      <div class="col__row" id="colRow"></div>
+    </section>
+
+    <dialog class="dlg on-paper" id="reserveDlg" aria-labelledby="reserveTitle">
+      <div class="dlg__in">
+        <div class="dlg__head">
+          <div>
+            <p class="kicker">Reserve</p>
+            <h3 id="reserveTitle">Bag</h3>
+          </div>
+          <button class="dlg__close" type="button" id="reserveClose" aria-label="Close">✕</button>
+        </div>
+        <form class="frm" id="reserveForm" novalidate>
+          <div class="frm__row">
+            <span class="frm__row label" id="sizeLabel" style="font-size:var(--t-sm);letter-spacing:.06em;text-transform:uppercase;font-variation-settings:'wght' 600">Size</span>
+            <div class="frm__sizes" id="reserveSizes" role="radiogroup" aria-labelledby="sizeLabel"></div>
+          </div>
+          <div class="frm__row">
+            <label for="rName">Name</label>
+            <input id="rName" name="name" autocomplete="name" required>
+            <p class="frm__err" id="rNameErr" aria-live="polite"></p>
+          </div>
+          <div class="frm__row">
+            <label for="rEmail">Email</label>
+            <input id="rEmail" name="email" type="email" autocomplete="email" required>
+            <p class="frm__err" id="rEmailErr" aria-live="polite"></p>
+          </div>
+          <div class="frm__row">
+            <label for="rQty">Bags</label>
+            <input id="rQty" name="qty" type="number" min="1" max="12" value="1" inputmode="numeric" required>
+            <p class="frm__err" id="rQtyErr" aria-live="polite"></p>
+          </div>
+          <div class="frm__actions">
+            <button class="btn" type="submit">Send reservation</button>
+            <button class="btn btn--ghost" type="button" id="reserveCopy">Copy summary</button>
+          </div>
+          <p class="frm__status" id="reserveStatus" aria-live="polite"></p>
+          <p class="frm__fine">Sending opens your email app with the reservation written out. Nothing is charged until we confirm.</p>
+        </form>
+      </div>
+    </dialog>
+
+    <!-- ================= STORY ================= -->
+    <section class="sec sec--paper on-paper sty" id="story" aria-labelledby="storyTitle">
+      <div class="sec__head">
+        <p class="kicker rv">The farm</p>
+        <h2 id="storyTitle" class="rv">Three generations, one hillside</h2>
+      </div>
+      <div class="sty__grid" id="storyGrid"></div>
+    </section>
+
+    <!-- ================= ORIGINS ================= -->
+    <section class="sec sec--dark org" id="origins" aria-labelledby="orgTitle">
+      <div class="sec__head">
+        <p class="kicker rv">Origins</p>
+        <h2 id="orgTitle" class="rv">Eight coffee regions of Costa Rica</h2>
+        <p class="rv">Choose a region on the map or in the list. The red pin is home.</p>
+      </div>
+      <div class="org__grid">
+        <div class="org__map" id="orgMap"></div>
+        <div>
+          <div class="org__panel" id="orgPanel" aria-live="polite"></div>
+          <ul class="org__list" id="orgList" aria-label="Regions"></ul>
+          <p class="org__fine">Elevation and harvest windows are typical ranges and vary by farm and year.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= CONTACT ================= -->
+    <section class="sec sec--paper on-paper ctc" id="contact" aria-labelledby="ctcTitle">
+      <div class="sec__head">
+        <p class="kicker rv">Contact</p>
+        <h2 id="ctcTitle" class="rv">Visit the hillside</h2>
+      </div>
+      <div class="ctc__grid">
+        <div class="ctc__details" id="ctcDetails"></div>
+        <form class="frm" id="ctcForm" novalidate>
+          <div class="frm__row">
+            <label for="cName">Name</label>
+            <input id="cName" name="name" autocomplete="name" required>
+            <p class="frm__err" id="cNameErr" aria-live="polite"></p>
+          </div>
+          <div class="frm__row">
+            <label for="cEmail">Email</label>
+            <input id="cEmail" name="email" type="email" autocomplete="email" required>
+            <p class="frm__err" id="cEmailErr" aria-live="polite"></p>
+          </div>
+          <div class="frm__row">
+            <label for="cTopic">I’m writing about</label>
+            <select id="cTopic" name="topic">
+              <option>A visit to the tasting room</option>
+              <option>Wholesale or export</option>
+              <option>Press</option>
+              <option>Something else</option>
+            </select>
+          </div>
+          <div class="frm__row">
+            <label for="cMsg">Message</label>
+            <textarea id="cMsg" name="message" required></textarea>
+            <p class="frm__err" id="cMsgErr" aria-live="polite"></p>
+          </div>
+          <div class="frm__actions">
+            <button class="btn" type="submit">Send message</button>
+          </div>
+          <p class="frm__status" id="ctcStatus" aria-live="polite"></p>
+          <p class="frm__fine">This opens your email app with the message written out; there is no server behind this page.</p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="ftr">
+    <p><b>YORAI</b> · Tarrazú, Costa Rica</p>
+    <p id="ftrLinks"></p>
+    <p>Demo site. Farm details are placeholders.</p>
+  </footer>
+</body>
+</html>

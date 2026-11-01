@@ -1,0 +1,24 @@
+{
+  "name": "yorai",
+  "version": "1.0.0",
+  "description": "YORAI \u2014 scroll-driven 3D coffee journey (static site)",
+  "scripts": {
+    "serve": "python3 -m http.server 4173 --directory site",
+    "test:contrast": "node tests/contrast.mjs",
+    "test:probe": "node tests/probe.mjs",
+    "test:axe": "node tests/axe.mjs",
+    "og": "node tests/og.mjs",
+    "vendor:three": "esbuild node_modules/three/build/three.module.js --minify --format=esm --legal-comments=none --outfile=site/vendor/three.module.js --allow-overwrite"
+  },
+  "private": true,
+  "devDependencies": {
+    "@fontsource-variable/hanken-grotesk": "^5.3.0",
+    "@fontsource-variable/newsreader": "^5.3.0",
+    "axe-core": "^4.10.2",
+    "esbuild": "^0.28.2",
+    "gsap": "^3.12.5",
+    "lighthouse": "^12.6.1",
+    "playwright": "^1.63.0",
+    "three": "^0.170.0"
+  }
+}
