@@ -1,10 +1,11 @@
-import { BRAND, CHAPTERS } from '../data/content.js?v=1';
-import * as settings from './settings.js?v=1';
-import { renderMenu } from './menu.js?v=1';
-import { renderCollection } from './collection.js?v=1';
-import { renderStory } from './story.js?v=1';
-import { renderOrigins } from './origins.js?v=1';
-import { renderContact } from './contact.js?v=1';
+import { BRAND, CHAPTERS } from '../data/content.js?v=2';
+import * as settings from './settings.js?v=2';
+import { renderMenu } from './menu.js?v=2';
+import { renderCollection } from './collection.js?v=2';
+import { renderStory } from './story.js?v=2';
+import { renderOrigins } from './origins.js?v=2';
+import { renderContact } from './contact.js?v=2';
+import { closeDialog, staggerReveals } from './ui.js?v=2';
 
 const $ = (s, r = document) => r.querySelector(s);
 const html = document.documentElement;
@@ -64,8 +65,8 @@ document.querySelectorAll('main > section').forEach((s) => sectionObs.observe(s)
 /* Mobile nav sheet */
 const sheet = $('#navSheet');
 $('#menuOpen').addEventListener('click', () => sheet.showModal());
-$('#menuClose').addEventListener('click', () => sheet.close());
-sheet.addEventListener('click', (e) => { if (e.target === sheet) sheet.close(); });
+$('#menuClose').addEventListener('click', () => closeDialog(sheet));
+sheet.addEventListener('click', (e) => { if (e.target === sheet) closeDialog(sheet); });
 sheet.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => sheet.close()));
 
 
@@ -96,6 +97,7 @@ CHAPTERS.forEach((c, i) => {
   spaces.appendChild(sp);
   const a = document.createElement('a');
   a.href = '#chapter-' + c.key;
+  a.style.setProperty('--i', i);
   a.innerHTML = `<i aria-hidden="true"></i><span>${c.kicker}</span>`;
   a.addEventListener('click', (e) => { e.preventDefault(); scrollToChapter(i); });
   rail.appendChild(a);
@@ -109,7 +111,8 @@ function scrollToChapter(i) {
   window.scrollTo({ top: chapterStart(i) + 8, behavior: state.calm ? 'instant' : 'smooth' });
 }
 
-/* The driver: one read of scrollY per frame, --jt on the stage, --pn on each copy block. */
+/* The driver: one read of scrollY per frame, --jt on the stage, --pn on each copy block.
+ * Scroll events are coalesced into one write per animation frame. */
 export function jtFromY(y) {
   let jt = 0, acc = 0;
   for (let i = 0; i < spaceEls.length; i++) {
@@ -148,8 +151,10 @@ const ACCENTS = ['#a7bdb8', '#e0564f', '#e2b15c', '#ff7a2f', '#c88a4e', '#e8c88a
 stage.style.setProperty('--accent', ACCENTS[0]);
 railLinks[0].setAttribute('aria-current', 'step');
 stage.dataset.chapter = 0;
-window.addEventListener('scroll', drive, { passive: true });
-window.addEventListener('resize', () => { lastY = -1; drive(); });
+let driveQueued = false;
+function requestDrive() { if (driveQueued) return; driveQueued = true; requestAnimationFrame(() => { driveQueued = false; drive(); }); }
+window.addEventListener('scroll', requestDrive, { passive: true });
+window.addEventListener('resize', () => { lastY = -1; requestDrive(); });
 drive();
 
 /* Is the stage on screen? The 3D scene only renders while it is. */
@@ -173,7 +178,8 @@ function decideTier() {
   if (state.tier !== 'auto') return state.tier;
   if (!webglAvailable()) { state.tierReason = 'no WebGL'; return 'still'; }
   const swgpu = /swiftshader|llvmpipe|software/i.test(state.gpu || '');
-  const small = Math.min(innerWidth, innerHeight) < 500;
+  // the device's screen, not the window: a small window on a desktop is cheap to render anyway
+  const small = Math.min(screen.width || innerWidth, screen.height || innerHeight) < 500;
   const cores = navigator.hardwareConcurrency || 4;
   if (swgpu) { state.tierReason = 'software GPU'; return 'lite'; }
   if (small || cores <= 4 || (navigator.deviceMemory && navigator.deviceMemory <= 4)) { state.tierReason = 'small screen or low core count'; return 'lite'; }
@@ -185,7 +191,7 @@ if (state.tier === 'still' || state.tier === 'text') {
   jr.classList.add('jr--still');
   if (state.tier === 'text') jr.classList.add('jr--text');
 } else {
-  const start = () => import('./journey3d.js?v=1').then((m) => m.mount({ host: $('#canvasHost'), jr, stage, state, onState, explicit: !!settings.explicitTier(), jtFromY })).catch((err) => {
+  const start = () => import('./journey3d.js?v=2').then((m) => m.mount({ host: $('#canvasHost'), jr, stage, state, onState, explicit: !!settings.explicitTier(), jtFromY })).catch((err) => {
     console.error('3D journey failed, falling back to still scenes', err);
     state.tier = 'still'; state.tierReason = 'scene failed: ' + (err && err.message);
     jr.classList.remove('jr--webgl'); jr.classList.add('jr--still');
@@ -235,7 +241,8 @@ renderCollection();
 renderStory();
 renderOrigins();
 renderContact();
-/* Reveal on approach (after the sections exist) */
+/* Reveal on approach (after the sections exist); siblings stagger by --rv-i */
+staggerReveals();
 const rvObs = new IntersectionObserver((entries) => {
   entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); rvObs.unobserve(e.target); } });
 }, { rootMargin: '0px 0px -8% 0px' });

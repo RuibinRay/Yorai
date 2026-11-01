@@ -14,12 +14,24 @@
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="fonts/newsreader-display.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/hanken-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/tokens.css?v=1">
-  <link rel="stylesheet" href="css/site.css?v=1">
+  <script>
+    /* Before first paint: mark that scripts run (so load animations may hide nothing without them)
+       and settle the motion state early, so a calm visitor never sees an entrance animation start. */
+    (function () {
+      var h = document.documentElement; h.classList.add('js');
+      try {
+        var m = JSON.parse(localStorage.getItem('yorai:motion') || '"auto"');
+        var calm = m === 'calm' || (m === 'auto' && matchMedia('(prefers-reduced-motion: reduce)').matches);
+        if (calm) h.classList.add('is-calm');
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="css/tokens.css?v=2">
+  <link rel="stylesheet" href="css/site.css?v=2">
   <script type="importmap">{ "imports": { "three": "./vendor/three.module.js" } }</script>
   <script src="vendor/gsap.min.js" defer></script>
   <script src="vendor/ScrollTrigger.min.js" defer></script>
-  <script type="module" src="js/main.js?v=1"></script>
+  <script type="module" src="js/main.js?v=2"></script>
 </head>
 <body>
   <a class="skip" href="#menu">Skip the journey, go to the menu</a>
@@ -71,6 +83,7 @@
         </div>
         <div class="jr__canvas" id="canvasHost" aria-hidden="true"></div>
         <div class="jr__vignette" aria-hidden="true"></div>
+        <div class="jr__fade" aria-hidden="true"></div>
         <div class="jr__progress" aria-hidden="true"></div>
 
         <div class="jr__hero" id="hero" data-chapter="0">
@@ -98,12 +111,12 @@
     <!-- ================= MENU ================= -->
     <section class="sec sec--paper on-paper cup" id="menu" aria-labelledby="menuTitle">
       <div class="sec__head">
-        <p class="kicker rv">The cupping table</p>
+        <p class="kicker rv">VII · The cupping table</p>
         <h2 id="menuTitle" class="rv">Eight coffees, brewed to order</h2>
         <p class="rv">Everything on the table is grown, milled and roasted at the farm. Pour-overs are brewed to order at 94 °C; the espresso is a honey-process blend of two lots.</p>
       </div>
       <div class="cup__grid">
-        <div class="cup__aside">
+        <div class="cup__aside rv">
           <div>
             <p class="kicker">Filter by process</p>
             <div class="cup__filters" id="cupFilters" role="group" aria-label="Filter by process"></div>
@@ -121,7 +134,7 @@
     <!-- ================= COLLECTION ================= -->
     <section class="sec sec--dark col" id="collection" aria-labelledby="colTitle">
       <div class="sec__head">
-        <p class="kicker rv">The collection</p>
+        <p class="kicker rv">VIII · The collection</p>
         <h2 id="colTitle" class="rv">Four bags, each from one slope</h2>
         <p class="rv">Roasted on Mondays and shipped the same week. Reserve a bag and we confirm by email with the roast date before anything is charged.</p>
       </div>
@@ -170,7 +183,7 @@
     <!-- ================= STORY ================= -->
     <section class="sec sec--paper on-paper sty" id="story" aria-labelledby="storyTitle">
       <div class="sec__head">
-        <p class="kicker rv">The farm</p>
+        <p class="kicker rv">IX · The farm</p>
         <h2 id="storyTitle" class="rv">Three generations, one hillside</h2>
       </div>
       <div class="sty__grid" id="storyGrid"></div>
@@ -179,13 +192,13 @@
     <!-- ================= ORIGINS ================= -->
     <section class="sec sec--dark org" id="origins" aria-labelledby="orgTitle">
       <div class="sec__head">
-        <p class="kicker rv">Origins</p>
+        <p class="kicker rv">X · Origins</p>
         <h2 id="orgTitle" class="rv">Eight coffee regions of Costa Rica</h2>
         <p class="rv">Choose a region on the map or in the list. The red pin is home.</p>
       </div>
       <div class="org__grid">
-        <div class="org__map" id="orgMap"></div>
-        <div>
+        <div class="org__map rv" id="orgMap"></div>
+        <div class="rv">
           <div class="org__panel" id="orgPanel" aria-live="polite"></div>
           <ul class="org__list" id="orgList" aria-label="Regions"></ul>
           <p class="org__fine">Elevation and harvest windows are typical ranges and vary by farm and year.</p>
@@ -196,12 +209,12 @@
     <!-- ================= CONTACT ================= -->
     <section class="sec sec--paper on-paper ctc" id="contact" aria-labelledby="ctcTitle">
       <div class="sec__head">
-        <p class="kicker rv">Contact</p>
+        <p class="kicker rv">XI · Contact</p>
         <h2 id="ctcTitle" class="rv">Visit the hillside</h2>
       </div>
       <div class="ctc__grid">
-        <div class="ctc__details" id="ctcDetails"></div>
-        <form class="frm" id="ctcForm" novalidate>
+        <div class="ctc__details rv" id="ctcDetails"></div>
+        <form class="frm rv" id="ctcForm" novalidate>
           <div class="frm__row">
             <label for="cName">Name</label>
             <input id="cName" name="name" autocomplete="name" required>

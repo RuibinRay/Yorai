@@ -96,6 +96,9 @@ await sweep(820, 1180, 'still', 'tablet-still');
   check('map pin click selects Guanacaste', (await page.textContent('#orgPanel h3')) === 'Guanacaste');
   // reserve dialog
   await page.evaluate(() => document.querySelector('[data-reserve="cerro-alto"]').scrollIntoView({ block: 'center', behavior: 'instant' }));
+  // let the cards' staggered reveal finish, or Playwright's own scroll-into-view may nudge the page by a pixel mid-transition
+  await page.waitForFunction(() => [...document.querySelectorAll('.col__card')].every((c) => c.classList.contains('is-in')), null, { timeout: 4000 }).catch(() => {});
+  await page.waitForTimeout(900);
   const before = await page.evaluate(() => scrollY);
   await page.click('[data-reserve="cerro-alto"]');
   await page.waitForTimeout(200);

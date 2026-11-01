@@ -18,12 +18,14 @@ Every asset path in the site is relative, so it works at the `/Yorai/` sub-path 
 
 Everything a visitor reads lives in `site/data/content.js`: chapter copy, menu, collection, story, regions, contact details. Brand facts marked `PLACEHOLDER` are invented for the demo and must be replaced before launch. The scroll length of each chapter is `length` (in vh) in `CHAPTERS`.
 
-When you change any JS or CSS, bump the `?v=1` query on every import in `index.html` and the `js/*.js` imports at once (search for `?v=`), or browsers will mix old and new modules.
+When you change any JS or CSS, bump the `?v=2` query on every import in `index.html` and the `js/*.js` imports at once (search for `?v=`), or browsers will mix old and new modules.
 
 ## Motion, quality tiers and diagnostics
 
 - **Motion** button in the header: turns the live scene off (held still frames per chapter, crossfaded) and on. The choice is remembered on the device. If the operating system asks for reduced motion and the visitor hasn't chosen, the site starts still and shows a one-click notice to turn motion on.
-- **Pause scene** (bottom right of the journey) pauses time-based motion (mist, steam, tumbling beans) without touching the scroll.
+- **Pause scene** (bottom right of the journey) pauses time-based motion (mist, drifting cloud, leaf wind, steam, tumbling beans, the camera's breath) without touching the scroll.
+- The camera path is a dolly per chapter (pose `a` → `b`) and a crossing through the fog to the next chapter; `CAM[i].v` is an optional via point the crossing cranes through (over the plantation rows, over the harvest canopy) and `CAM[i].cross` shortens a crossing where the fog is dark. The knots are rounded by a small sampling kernel so the camera never halts or kinks at a pose; scrolling backwards plays the same path in reverse.
+- Entrance and reveal motion is CSS only: header, rail and nav-sheet links rise in on load (`rise-in` / `fade-up`, keyed off `html.js`), sections reveal with `.rv` and a `--rv-i` sibling stagger (set by `js/ui.js`), section titles and bags are uncovered with `clip-path`, dialogs and the phone nav sheet animate open and closed (`closeDialog` in `js/ui.js`). Every one of these is switched off under calm motion, which an inline script in `<head>` settles before first paint.
 - Quality tiers: `full` (device pixel ratio up to 2, full particle counts) → `lite` (dpr 1, fewer instances; chosen on small screens, ≤ 4 cores or a software GPU; the watchdog also steps full down to lite after 4 s under 24 fps) → `still` (no WebGL: painted gradients per chapter) → `text`. Force one with `?tier=full|lite|still|text`; an explicit tier is never demoted.
 - `?why` shows a diagnostic panel: tier and the reason, calm state and the reason, GPU, fps, scene state, progress.
 
@@ -50,6 +52,7 @@ site/
   js/main.js            settings, header, scroll driver (--jt / --pn custom properties), tier decision, sections
   js/journey3d.js       the Three.js journey (six procedural environments, camera path, atmosphere, tiers)
   js/menu.js, collection.js, story.js, origins.js, contact.js, forms.js, settings.js
+  js/ui.js              animated dialog close, reveal stagger indices
   vendor/               three.module.js (minified, MIT), gsap.min.js + ScrollTrigger.min.js (GSAP licence)
   fonts/                Newsreader Variable (OFL), Hanken Grotesk Variable (OFL)
   assets/               favicon.svg, og.jpg

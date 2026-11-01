@@ -18,13 +18,16 @@ const PAL = [
   { fog: '#1f130d', top: '#0d0704', dens: 0.085, sky: '#50382a', ground: '#15100c', sun: '#ffd9ae', dir: [-0.5, 1, 0.4], sunI: 1.6, hemiI: 0.8, exp: 1.05 },
   { fog: '#0c0806', top: '#050302', dens: 0.11, sky: '#2a1c12', ground: '#0c0806', sun: '#ffe9ca', dir: [0.1, 1, 0.15], sunI: 1.0, hemiI: 0.5, exp: 1.0 },
 ];
-/* Camera poses in group-local space: a = start, b = end of the environment (reached at p = 0.72) */
+/* Camera poses in group-local space: a = start, b = end of the environment (reached at p = 1 − cross,
+ * 0.72 by default), then the crossing through the fog to the next chapter's a. `v` is an optional
+ * via point (local to this chapter) the crossing passes through, used to crane the camera up and
+ * over set dressing instead of through it; `cross` shortens the crossing where the fog is dark. */
 const CAM = [
-  { a: [0, 3.4, 15], al: [0, 1.0, -12], b: [0.3, 1.75, -9], bl: [-0.6, 1.3, -34] },
-  { a: [1.4, 1.25, 3.3], al: [-0.4, 1.6, -0.2], b: [-0.5, 1.25, 2.9], bl: [1.5, 0.85, 0.9] },
-  { a: [-7.5, 2.6, 9.5], al: [0, 0.9, 0], b: [4.0, 1.9, 1.6], bl: [7, 0.9, -8] },
-  { a: [4.6, 2.3, 8.2], al: [0, 1.6, 0], b: [0.9, 1.85, 3.5], bl: [0, 1.45, -1] },
-  { a: [3.3, 2.1, 3.7], al: [0.2, 1.3, 0], b: [-1.1, 2.0, 2.6], bl: [0.45, 1.3, 0] },
+  { a: [0, 3.4, 15], al: [0, 1.0, -12], b: [0.3, 1.75, -9], bl: [-0.6, 1.3, -34], v: [-0.1, 2.4, -58] },
+  { a: [1.4, 1.25, 3.3], al: [-0.4, 1.6, -0.2], b: [-0.5, 1.25, 2.9], bl: [1.5, 0.85, 0.9], v: [-1.6, 5.6, 2.2] },
+  { a: [-7.5, 2.6, 9.5], al: [0, 0.9, 0], b: [4.0, 1.9, 1.6], bl: [6.5, 0.4, -5] },
+  { a: [4.6, 2.3, 8.2], al: [0, 1.6, 0], b: [0.9, 1.85, 3.5], bl: [0, 1.45, -1], cross: 0.2 },
+  { a: [3.3, 2.1, 3.7], al: [0.2, 1.3, 0], b: [-1.1, 2.0, 2.6], bl: [0.45, 1.3, 0], cross: 0.2 },
   { a: [2.5, 1.85, 2.7], al: [0, 0.95, 0], b: [0.22, 2.75, 0.5], bl: [-0.22, 0.9, 0] },
 ];
 
@@ -75,7 +78,27 @@ const between = (a, b) => a + rnd() * (b - a);
 function noise2(x, y) { return Math.sin(x * 1.7 + Math.sin(y * 0.9) * 2) * Math.cos(y * 1.3 + Math.sin(x * 0.7) * 2); }
 
 function ellipsoidGeo(r = 0.5) { const g = new THREE.SphereGeometry(r, 10, 8); g.scale(1, 0.62, 0.52); return g; }
-function instanced(geo, mat, count) { const m = new THREE.InstancedMesh(geo, mat, count); m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); return m; }
+/* Only instances that move every frame (the roasting beans) need a dynamic buffer; the rest are uploaded once. */
+function instanced(geo, mat, count, dynamic = false) { const m = new THREE.InstancedMesh(geo, mat, count); if (dynamic) m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); return m; }
+
+/* Wind: a vertex-shader sway for leaf cards, phased by each instance's position so the foliage
+ * ripples rather than nodding in unison. One shared uniform; costs nothing on the CPU. */
+const windU = { uTime: { value: 0 }, uWind: { value: 0.045 } };
+function windy(mat) {
+  mat.onBeforeCompile = (shader) => {
+    Object.assign(shader.uniforms, windU);
+    shader.vertexShader = 'uniform float uTime; uniform float uWind;\n' + shader.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+      float wph = 0.0;
+      #ifdef USE_INSTANCING
+        wph = instanceMatrix[3].x * 1.9 + instanceMatrix[3].z * 1.3 + instanceMatrix[3].y * 0.7;
+      #endif
+      float wsw = sin(uTime * 1.35 + wph) * 0.6 + sin(uTime * 2.4 + wph * 2.3) * 0.4;
+      transformed.x += wsw * uWind * (0.35 + uv.y);
+      transformed.y += sin(uTime * 1.9 + wph * 1.7) * uWind * 0.35 * uv.y;`);
+  };
+  mat.customProgramCacheKey = () => 'yorai-wind';
+  return mat;
+}
 const dummy = new THREE.Object3D();
 const col = new THREE.Color();
 const ROASTED = new THREE.Color('#3a1c0e');
@@ -126,7 +149,7 @@ function buildPlantation(tier) {
   const nearRows = [];
   for (let i = 0; i < k; i++) { shrubs.getMatrixAt(i, dummy.matrix); dummy.matrix.decompose(dummy.position, dummy.quaternion, dummy.scale); if (Math.abs(dummy.position.x) < 6.5 && dummy.position.z > -34) nearRows.push([dummy.position.x, dummy.position.y, dummy.position.z, dummy.scale.x]); }
   const perShrub = tier === 'lite' ? 18 : 34;
-  const leafCards = instanced(new THREE.PlaneGeometry(0.46, 0.22), new THREE.MeshStandardMaterial({ map: leafTex(), alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.85 }), nearRows.length * perShrub);
+  const leafCards = instanced(new THREE.PlaneGeometry(0.46, 0.22), windy(new THREE.MeshStandardMaterial({ map: leafTex(), alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.85 })), nearRows.length * perShrub);
   let lc = 0;
   nearRows.forEach(([x, y, z, sc]) => {
     for (let j = 0; j < perShrub; j++) {
@@ -153,6 +176,11 @@ function buildPlantation(tier) {
   for (let i = 0; i < mp.count; i++) mp.setXYZ(i, between(-40, 40), between(0.2, 5), between(-60, 18));
   g.add(mist);
   g.userData.mist = mist;
+  // low cloud drifting across the volcanoes; fog softens the far ones into the sky
+  const clouds = points(tier === 'lite' ? 8 : 14, 30, '#e9f0ee', 0.2, softDot(128, 0.15));
+  const cp = clouds.geometry.attributes.position;
+  for (let i = 0; i < cp.count; i++) cp.setXYZ(i, between(-55, 55), between(9, 17), between(-70, -14));
+  g.add(clouds); g.userData.clouds = clouds;
   return g;
 }
 
@@ -184,7 +212,7 @@ function buildHarvest(tier) {
   g.add(cherries);
   // leaves
   const lt = leafTex();
-  const leaves = instanced(new THREE.PlaneGeometry(0.62, 0.3), new THREE.MeshStandardMaterial({ map: lt, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.8 }), 70);
+  const leaves = instanced(new THREE.PlaneGeometry(0.62, 0.3), windy(new THREE.MeshStandardMaterial({ map: lt, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.8 })), 70);
   for (let i = 0; i < 70; i++) {
     const p = curve.getPointAt(rnd());
     dummy.position.set(p.x + between(-0.2, 0.2), p.y + between(-0.15, 0.3), p.z + between(-0.3, 0.3));
@@ -218,10 +246,11 @@ function buildHarvest(tier) {
   // background shrubs
   const sg = new THREE.SphereGeometry(0.9, 12, 9);
   const sgp = sg.attributes.position; for (let i = 0; i < sgp.count; i++) { const j = 1 + noise2(sgp.getX(i) * 3, sgp.getZ(i) * 3) * 0.14; sgp.setXYZ(i, sgp.getX(i) * j, sgp.getY(i) * j * 0.85, sgp.getZ(i) * j); } sg.computeVertexNormals();
-  const shrubs = instanced(sg, new THREE.MeshStandardMaterial({ color: '#2f5a2c', roughness: 0.95 }), 160);
+  const shrubs = instanced(sg, new THREE.MeshStandardMaterial({ color: '#2a4f28', roughness: 1 }), 160);
   for (let i = 0; i < 160; i++) {
     const a = rnd() * 3.14, r = between(6, 18);
-    dummy.position.set(Math.cos(a) * r * 1.5, 0.7, -4 - Math.sin(a) * r); dummy.scale.set(between(0.8, 1.6), between(0.8, 1.4), between(0.8, 1.6)); dummy.rotation.y = rnd() * 6; dummy.updateMatrix(); shrubs.setMatrixAt(i, dummy.matrix);
+    dummy.position.set(Math.cos(a) * r * 1.5, 0.55, -4 - Math.sin(a) * r); dummy.scale.set(between(0.8, 1.6), between(0.7, 1.3), between(0.8, 1.6)); dummy.rotation.y = rnd() * 6; dummy.updateMatrix(); shrubs.setMatrixAt(i, dummy.matrix);
+    shrubs.setColorAt(i, col.set('#2a4f28').offsetHSL(between(-0.03, 0.03), between(-0.12, 0.05), between(-0.14, 0.04)));
   }
   g.add(shrubs);
   return g;
@@ -270,7 +299,8 @@ function buildMill(tier) {
 function buildRoast(tier) {
   const g = new THREE.Group();
   g.add(new THREE.Mesh(new THREE.PlaneGeometry(60, 60).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ color: '#17110d', roughness: 0.9 })));
-  const wall = new THREE.Mesh(new THREE.PlaneGeometry(40, 14), new THREE.MeshStandardMaterial({ color: '#1e1512', roughness: 1 })); wall.position.set(0, 7, -9); g.add(wall);
+  // a wall wide and tall enough to fill the view on the approach, so the roastery reads as an interior and not a glowing slab in the fog
+  const wall = new THREE.Mesh(new THREE.PlaneGeometry(120, 44), new THREE.MeshStandardMaterial({ color: '#1e1512', roughness: 1 })); wall.position.set(0, 18, -12); g.add(wall);
   const metal = new THREE.MeshStandardMaterial({ color: '#2a2420', metalness: 0.78, roughness: 0.38 });
   const brass = new THREE.MeshStandardMaterial({ color: '#b8894a', metalness: 0.9, roughness: 0.28 });
   // drum, open towards +z
@@ -293,7 +323,7 @@ function buildRoast(tier) {
   const glow = new THREE.PointLight('#ff9a4a', 0, 6, 2); glow.position.set(0, 1.6, 1.4); g.add(glow); g.userData.glow = glow;
   // beans inside
   const n = tier === 'lite' ? 260 : 520;
-  const beans = instanced(ellipsoidGeo(0.1), new THREE.MeshStandardMaterial({ color: '#8c6a3c', roughness: 0.7 }), n);
+  const beans = instanced(ellipsoidGeo(0.1), new THREE.MeshStandardMaterial({ color: '#8c6a3c', roughness: 0.7 }), n, true);
   const seeds = new Float32Array(n * 3);
   for (let i = 0; i < n; i++) { seeds[i * 3] = between(Math.PI * 0.62, Math.PI * 1.38); seeds[i * 3 + 1] = between(0.25, 0.95); seeds[i * 3 + 2] = between(-1.35, 1.35); }
   for (let i = 0; i < n; i++) { dummy.position.set(0, 1.2, 0); dummy.updateMatrix(); beans.setMatrixAt(i, dummy.matrix); beans.setColorAt(i, col.set('#b89a68')); }
@@ -341,7 +371,20 @@ function buildBrew(tier) {
   g.add(jarBeans);
   const lamp = new THREE.PointLight('#ffd9ae', 6, 8, 1.8); lamp.position.set(-0.6, 2.8, 1.2); g.add(lamp);
   const fill = new THREE.PointLight('#ffe6cc', 2.2, 5, 1.8); fill.position.set(0.8, 1.2, 2.2); g.add(fill);
+  g.add(practical(-0.6, 2.8, 1.2, '#ffd9ae', 2.6));
   return g;
+}
+
+/* A visible lamp: a warm bulb with a soft halo, so the dark approach to a scene has a light to travel toward. */
+function practical(x, y, z, color, haloSize) {
+  const lamp = new THREE.Group(); lamp.position.set(x, y, z);
+  lamp.add(new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 8), new THREE.MeshBasicMaterial({ color: '#fff3dc' })));
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: softDot(128), color, transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending }));
+  halo.scale.setScalar(haloSize); lamp.add(halo);
+  const shade = new THREE.Mesh(new THREE.ConeGeometry(0.26, 0.2, 24, 1, true), new THREE.MeshStandardMaterial({ color: '#1b1512', roughness: 0.6, metalness: 0.4, side: THREE.DoubleSide }));
+  shade.position.y = 0.12; lamp.add(shade);
+  const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 2.6, 6), new THREE.MeshStandardMaterial({ color: '#111' })); cord.position.y = 1.5; lamp.add(cord);
+  return lamp;
 }
 
 function buildCup(tier) {
@@ -371,6 +414,7 @@ function buildCup(tier) {
   const sp = steam.geometry.attributes.position; for (let i = 0; i < sp.count; i++) sp.setXYZ(i, between(-0.15, 0.15), between(1.2, 2.0), between(-0.15, 0.15));
   g.add(steam); g.userData.steam = steam;
   const spot = new THREE.SpotLight('#ffe3bd', 60, 9, 0.55, 0.7, 1.6); spot.position.set(0.4, 4.2, 0.8); spot.target.position.set(0, 0.9, 0); g.add(spot); g.add(spot.target);
+  g.add(practical(0.4, 3.3, 0.8, '#ffe3bd', 3.2));
   // a few beans on the table
   const beans = instanced(ellipsoidGeo(0.022), new THREE.MeshStandardMaterial({ color: '#3a2112', roughness: 0.7 }), 14);
   for (let i = 0; i < 14; i++) { const a = rnd() * 6.28, r = between(0.75, 1.3); dummy.position.set(Math.cos(a) * r, 0.83, Math.sin(a) * r); dummy.rotation.set(0, rnd() * 6, 0); dummy.scale.setScalar(1); dummy.updateMatrix(); beans.setMatrixAt(i, dummy.matrix); }
@@ -385,7 +429,10 @@ export function mount({ host, jr, stage, state, onState, explicit, jtFromY }) {
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1;
-  let dpr = tier === 'full' ? Math.min(devicePixelRatio || 1, 2) : 1;
+  // Full tier renders at up to 2× on ordinary viewports, 1.5× on very large ones (the fog and the
+  // tone mapping hide the difference; the fill rate does not).
+  const bigCanvas = host.clientWidth * host.clientHeight > 1.7e6;
+  let dpr = tier === 'full' ? Math.min(devicePixelRatio || 1, bigCanvas ? 1.5 : 2) : 1;
   renderer.setPixelRatio(dpr);
   renderer.setSize(host.clientWidth, host.clientHeight);
   host.appendChild(renderer.domElement);
@@ -429,7 +476,7 @@ export function mount({ host, jr, stage, state, onState, explicit, jtFromY }) {
     // The tween is what ScrollTrigger scrubs (smooths); proxy.p is scroll distance through the journey.
     const proxy = { p: 0 };
     const total = () => jr.offsetHeight - stage.offsetHeight;
-    gsap.to(proxy, { p: 1, ease: 'none', scrollTrigger: { trigger: jr, start: 'top top', end: 'bottom bottom', scrub: 0.9 } });
+    gsap.to(proxy, { p: 1, ease: 'none', scrollTrigger: { trigger: jr, start: 'top top', end: 'bottom bottom', scrub: 1.1 } });
     Object.defineProperty(state, 'smoothJt', { get: () => jtFromY(proxy.p * total()), configurable: true });
   }
 
@@ -438,20 +485,41 @@ export function mount({ host, jr, stage, state, onState, explicit, jtFromY }) {
   stage.addEventListener('pointermove', (e) => { if (e.pointerType !== 'mouse') return; const r = stage.getBoundingClientRect(); pointer.tx = (e.clientX - r.left) / r.width - 0.5; pointer.ty = (e.clientY - r.top) / r.height - 0.5; });
   stage.addEventListener('pointerleave', () => { pointer.tx = 0; pointer.ty = 0; });
 
-  const ease = (t) => t * t * (3 - 2 * t);
-  function pose(jt, calm) {
-    const i = Math.min(5, Math.floor(jt)); let p = jt - i;
-    if (calm) p = 0.62; // one held pose per chapter
-    const c = CAM[i];
-    if (p < 0.72 || i === 5) {
-      const t = ease(clamp(p / 0.72, 0, 1));
-      camPos.set(lerp(c.a[0], c.b[0], t), lerp(c.a[1], c.b[1], t), lerp(c.a[2], c.b[2], t) + Z[i]);
-      look.set(lerp(c.al[0], c.bl[0], t), lerp(c.al[1], c.bl[1], t), lerp(c.al[2], c.bl[2], t) + Z[i]);
+  /* The camera path. Each chapter is a dolly from pose a to pose b (reached at p = 0.72), then a fast
+   * crossing through the fog to the next chapter's a. Within a chapter the dolly keeps a gentle
+   * ease (speed varies ±35 %, never stops); the knots between segments are rounded by sampling the
+   * polyline a little ahead and behind and blending, so the camera never halts and re-accelerates
+   * at a pose and never kinks into a new direction. The rounding stays within a few units of the
+   * authored path, so no prop is clipped that the straight path would not have clipped. */
+  const dolly = (t) => t - 0.35 * Math.sin(Math.PI * 2 * t) / (Math.PI * 2);
+  function polyline(jt, outPos, outLook) {
+    jt = clamp(jt, 0, 6);
+    const i = Math.min(5, Math.floor(jt)); const p = jt - i;
+    const c = CAM[i]; const cross = c.cross ?? 0.28, s = 1 - cross;
+    if (p < s || i === 5) {
+      const t = i === 5 ? dolly(clamp(p, 0, 1)) : dolly(p / s);
+      outPos.set(lerp(c.a[0], c.b[0], t), lerp(c.a[1], c.b[1], t), lerp(c.a[2], c.b[2], t) + Z[i]);
+      outLook.set(lerp(c.al[0], c.bl[0], t), lerp(c.al[1], c.bl[1], t), lerp(c.al[2], c.bl[2], t) + Z[i]);
     } else {
-      const n = CAM[i + 1]; const t = ease((p - 0.72) / 0.28);
-      camPos.set(lerp(c.b[0], n.a[0], t), lerp(c.b[1], n.a[1], t), lerp(c.b[2] + Z[i], n.a[2] + Z[i + 1], t));
-      look.set(lerp(c.bl[0], n.al[0], t), lerp(c.bl[1], n.al[1], t), lerp(c.bl[2] + Z[i], n.al[2] + Z[i + 1], t));
+      const n = CAM[i + 1]; const t = (p - s) / cross;
+      if (c.v && t < 0.5) {
+        const u = t * 2;
+        outPos.set(lerp(c.b[0], c.v[0], u), lerp(c.b[1], c.v[1], u), lerp(c.b[2], c.v[2], u) + Z[i]);
+      } else if (c.v) {
+        const u = (t - 0.5) * 2;
+        outPos.set(lerp(c.v[0], n.a[0], u), lerp(c.v[1], n.a[1], u), lerp(c.v[2] + Z[i], n.a[2] + Z[i + 1], u));
+      } else {
+        outPos.set(lerp(c.b[0], n.a[0], t), lerp(c.b[1], n.a[1], t), lerp(c.b[2] + Z[i], n.a[2] + Z[i + 1], t));
+      }
+      outLook.set(lerp(c.bl[0], n.al[0], t), lerp(c.bl[1], n.al[1], t), lerp(c.bl[2] + Z[i], n.al[2] + Z[i + 1], t));
     }
+  }
+  const KERNEL = [[-0.05, 1], [-0.025, 2], [0, 3], [0.025, 2], [0.05, 1]]; // offsets in chapter units, weights
+  const kp = new THREE.Vector3(), kl = new THREE.Vector3();
+  function pose(jt, calm) {
+    if (calm) jt = Math.min(5, Math.floor(jt)) + 0.62; // one held pose per chapter
+    camPos.set(0, 0, 0); look.set(0, 0, 0);
+    for (const [o, w] of KERNEL) { polyline(jt + o, kp, kl); camPos.addScaledVector(kp, w / 9); look.addScaledVector(kl, w / 9); }
   }
   const fogA = new THREE.Color(), skyA = new THREE.Color(), gndA = new THREE.Color(), sunA = new THREE.Color();
   function atmosphere(jt) {
@@ -459,46 +527,65 @@ export function mount({ host, jr, stage, state, onState, explicit, jtFromY }) {
     const j = Math.min(5, i + 1);
     const t = i === 5 ? 0 : smoothstep(p, 0.6, 1.0); // blend towards the next chapter in the fog
     const A = PAL[i], B = PAL[j];
+    // the light changes within a chapter too: the plantation's morning burns off (fog thins, sun
+    // strengthens); the roast's fire is lit; the pour's lamp warms as the coffee rises
+    let densK = 1, sunK = 1, expK = 1;
+    if (i === 0) { const d = smoothstep(p, 0.05, 0.65); densK = lerp(1.3, 0.8, d); sunK = lerp(0.7, 1.3, d); expK = lerp(0.92, 1.06, d); }
+    if (i === 3) { const f = smoothstep(p, 0.05, 0.4); expK = lerp(0.9, 1.08, f); }
+    if (i === 4) { const w = smoothstep(p, 0.2, 0.9); expK = lerp(0.96, 1.08, w); }
     fogA.set(A.fog).lerp(col.set(B.fog), t); scene.fog.color.copy(fogA); scene.background.copy(fogA);
     sky.material.uniforms.uBottom.value.copy(fogA); sky.material.uniforms.uTop.value.set(A.top).lerp(col.set(B.top), t); sky.position.copy(camPos);
-    scene.fog.density = lerp(A.dens, B.dens, t);
+    scene.fog.density = lerp(A.dens * densK, B.dens, t);
     hemi.color.copy(skyA.set(A.sky).lerp(col.set(B.sky), t)); hemi.groundColor.copy(gndA.set(A.ground).lerp(col.set(B.ground), t)); hemi.intensity = lerp(A.hemiI, B.hemiI, t);
-    sun.color.copy(sunA.set(A.sun).lerp(col.set(B.sun), t)); sun.intensity = lerp(A.sunI, B.sunI, t);
+    sun.color.copy(sunA.set(A.sun).lerp(col.set(B.sun), t)); sun.intensity = lerp(A.sunI * sunK, B.sunI, t);
     tmpA.fromArray(A.dir); tmpB.fromArray(B.dir); tmpA.lerp(tmpB, t).normalize().multiplyScalar(30);
     sun.position.copy(camPos).add(tmpA); sunTarget.position.copy(camPos);
-    renderer.toneMappingExposure = lerp(A.exp, B.exp, t);
+    renderer.toneMappingExposure = lerp(A.exp * expK, B.exp, t);
   }
 
   /* per-chapter time animation */
   let time = 0;
-  const q = new THREE.Quaternion();
+  let lastRoastColor = -1;
   function animate(jt, dt) {
     const i = Math.min(5, Math.floor(jt)); const p = clamp(jt - i, 0, 1);
-    groups.forEach((g, k) => { g.visible = k === i || (k === i + 1 && p > 0.6) || (k === i - 1 && p < 0.1); if (g.visible && !g.userData.built) build(k); });
+    // the next environment is switched on well before the crossing (the fog hides it until then,
+    // so nothing pops), the previous one stays on for the first tenth of a chapter
+    groups.forEach((g, k) => { g.visible = k === i || (k === i + 1 && p > 0.45) || (k === i - 1 && p < 0.12); if (g.visible && !g.userData.built) build(k); });
     if (!groups[Math.min(5, i + 1)].userData.built && p > 0.3) build(Math.min(5, i + 1));
-    // mist drifts
+    windU.uTime.value = time;
+    // mist and low cloud drift
     if (groups[0].visible && groups[0].userData.mist) {
       const pos = groups[0].userData.mist.geometry.attributes.position;
       for (let k = 0; k < pos.count; k++) { let x = pos.getX(k) + dt * (0.35 + (k % 5) * 0.05); if (x > 42) x = -42; pos.setX(k, x); pos.setY(k, pos.getY(k) + Math.sin(time * 0.4 + k) * dt * 0.08); }
       pos.needsUpdate = true;
+      const cl = groups[0].userData.clouds;
+      if (cl) {
+        const cp = cl.geometry.attributes.position;
+        for (let k = 0; k < cp.count; k++) { let x = cp.getX(k) + dt * (0.22 + (k % 3) * 0.06); if (x > 60) x = -60; cp.setX(k, x); }
+        cp.needsUpdate = true;
+        cl.material.opacity = 0.2 * lerp(1.15, 0.7, smoothstep(p, 0.05, 0.65)); // the morning thins them with the fog
+      }
     }
     if (groups[2].visible && groups[2].userData.water) groups[2].userData.water.material.uniforms.uTime.value = time;
     if (groups[3].visible && groups[3].userData.drum) {
       const u = groups[3].userData; const roastP = i === 3 ? p : i > 3 ? 1 : 0;
       u.drum.rotation.z += dt * 1.4;
-      const heat = i === 3 ? smoothstep(p, 0.05, 0.35) : i > 3 ? 1 : 0;
+      // the burner is lit as the visitor arrives (an ember glow is already there, so the drum is never lost in the dark)
+      const heat = i === 3 ? smoothstep(p, 0.0, 0.28) : i > 3 ? 1 : 0;
       u.burner.material.opacity = heat * (0.45 + Math.sin(time * 17) * 0.08 + Math.sin(time * 5.3) * 0.06);
-      u.fire.intensity = heat * (16 + Math.sin(time * 13) * 2.5); u.glow.intensity = heat * 5;
+      u.fire.intensity = 2.5 + heat * (14 + Math.sin(time * 13) * 2.5); u.glow.intensity = 1.2 + heat * 4;
       const seeds = u.seeds; const b = u.beans; const n = b.count;
-      col.set('#b89a68').lerp(ROASTED, smoothstep(roastP, 0.25, 0.95));
+      // the beans darken with the chapter's progress; the colour buffer is only rewritten when the shade moves
+      const shade = Math.round(smoothstep(roastP, 0.25, 0.95) * 60) / 60;
+      const recolor = shade !== lastRoastColor; if (recolor) { lastRoastColor = shade; col.set('#b89a68').lerp(ROASTED, shade); }
       for (let k = 0; k < n; k++) {
-        const a = seeds[k * 3] + Math.sin(time * 1.9 + k * 0.37) * 0.28 + time * 0.0;
+        const a = seeds[k * 3] + Math.sin(time * 1.9 + k * 0.37) * 0.28;
         const r = seeds[k * 3 + 1] * 1.08 + Math.sin(time * 2.6 + k) * 0.06;
         dummy.position.set(Math.cos(a) * r, 1.6 + Math.sin(a) * r, seeds[k * 3 + 2]);
         dummy.rotation.set(time * 1.3 + k, time * 0.9 + k * 2, 0); dummy.scale.setScalar(1); dummy.updateMatrix(); b.setMatrixAt(k, dummy.matrix);
-        b.setColorAt(k, col);
+        if (recolor) b.setColorAt(k, col);
       }
-      b.instanceMatrix.needsUpdate = true; if (b.instanceColor) b.instanceColor.needsUpdate = true;
+      b.instanceMatrix.needsUpdate = true; if (recolor && b.instanceColor) b.instanceColor.needsUpdate = true;
       const sm = u.smoke.geometry.attributes.position;
       for (let k = 0; k < sm.count; k++) { let y = sm.getY(k) + dt * (0.5 + (k % 3) * 0.2); let x = sm.getX(k) + Math.sin(time + k) * dt * 0.15; if (y > 7) { y = 2.2; x = between(-0.5, 0.5); } sm.setY(k, y); sm.setX(k, x); }
       sm.needsUpdate = true; u.smoke.material.opacity = 0.12 * heat;
@@ -547,6 +634,11 @@ export function mount({ host, jr, stage, state, onState, explicit, jtFromY }) {
     needs = false;
     pose(smoothJt, calm);
     if (!calm) { pointer.x += (pointer.tx - pointer.x) * 0.06; pointer.y += (pointer.ty - pointer.y) * 0.06; camPos.x += pointer.x * 0.35; camPos.y -= pointer.y * 0.22; }
+    if (moving) {
+      // a breath of hand-held drift so a held frame is never dead still (a centimetre or two)
+      camPos.y += Math.sin(time * 0.62) * 0.014 + Math.sin(time * 1.37) * 0.006;
+      look.x += Math.sin(time * 0.48) * 0.012; look.y += Math.cos(time * 0.71) * 0.008;
+    }
     camera.position.copy(camPos); camera.lookAt(look);
     atmosphere(smoothJt);
     animate(smoothJt, moving ? dt : 0);
