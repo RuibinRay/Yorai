@@ -1,5 +1,6 @@
-import { COLLECTION, BRAND } from '../data/content.js?v=1';
-import { validate, isEmail, mailto, copyText } from './forms.js?v=1';
+import { COLLECTION, BRAND } from '../data/content.js?v=2';
+import { validate, isEmail, mailto, copyText } from './forms.js?v=2';
+import { closeDialog } from './ui.js?v=2';
 
 /* A bag drawn in code: one gradient per bag, label ink from the data. */
 function bagSVG(b) {
@@ -67,11 +68,12 @@ export function renderCollection() {
     status.textContent = ''; status.className = 'frm__status';
     form.reset();
     sizes.querySelector('input').checked = true;
+    btn.closest('.col__card')?.classList.add('is-open');
     dlg.showModal();
   }));
-  document.getElementById('reserveClose').addEventListener('click', () => dlg.close());
-  dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
-  dlg.addEventListener('close', () => { opener?.focus(); });
+  document.getElementById('reserveClose').addEventListener('click', () => closeDialog(dlg));
+  dlg.addEventListener('click', (e) => { if (e.target === dlg) closeDialog(dlg); });
+  dlg.addEventListener('close', () => { row.querySelectorAll('.is-open').forEach((c) => c.classList.remove('is-open')); opener?.focus(); });
 
   function summary() {
     const g = form.size.value;

@@ -1,4 +1,4 @@
-import { REGIONS } from '../data/content.js?v=1';
+import { REGIONS } from '../data/content.js?v=2';
 
 /* A simplified outline of Costa Rica (lon, lat), clockwise from the north-west.
  * Hand-traced at roughly 15–30 km fidelity; for an atlas-grade coast, replace with
@@ -47,8 +47,8 @@ export function renderOrigins() {
     <div class="org__pins"></div>`;
   const pins = host.querySelector('.org__pins');
   pins.style.cssText = 'position:absolute;inset:0;';
-  pins.innerHTML = REGIONS.map((r) => `
-    <button type="button" class="org__pin${r.home ? ' is-home' : ''}" data-id="${r.id}" style="left:${((px(r.lon) + (r.nudge?.[0] || 0)) / W * 100).toFixed(2)}%;top:${((py(r.lat) + (r.nudge?.[1] || 0)) / H * 100).toFixed(2)}%" aria-pressed="false">
+  pins.innerHTML = REGIONS.map((r, i) => `
+    <button type="button" class="org__pin${r.home ? ' is-home' : ''}" data-id="${r.id}" style="--i:${i};left:${((px(r.lon) + (r.nudge?.[0] || 0)) / W * 100).toFixed(2)}%;top:${((py(r.lat) + (r.nudge?.[1] || 0)) / H * 100).toFixed(2)}%" aria-pressed="false">
       <span class="org__pin-ring" aria-hidden="true"></span><span class="org__pin-label">${r.name}</span>
     </button>`).join('');
   list.innerHTML = REGIONS.map((r) => `<li><button type="button" data-id="${r.id}" aria-pressed="false">${r.name}</button></li>`).join('');
@@ -58,9 +58,13 @@ export function renderOrigins() {
   const setPinMode = () => pinEls.forEach((b) => { b.tabIndex = small.matches ? -1 : 0; b.setAttribute('aria-hidden', String(small.matches)); });
   small.addEventListener?.('change', setPinMode); setPinMode();
   const buttons = [...pinEls, ...list.querySelectorAll('button')];
+  let currentId = null;
   function select(id) {
+    if (id === currentId) return;
+    currentId = id;
     const r = REGIONS.find((x) => x.id === id);
     buttons.forEach((b) => { const on = b.dataset.id === id; b.setAttribute('aria-pressed', String(on)); b.classList.toggle('is-on', on); });
+    // the content changes at once (the live region announces it); its lines rise in, see .org__panel > * in site.css
     panel.innerHTML = `
       ${r.home ? '<span class="org__home">Home of YORAI</span>' : ''}
       <h3>${r.name}</h3>

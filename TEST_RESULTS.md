@@ -1,3 +1,14 @@
+# Test results — 2026-11-01, cinematic pass (lab)
+
+Same lab as below (headless Chromium, SwiftShader). Re-run after the camera-path, atmosphere, entrance/reveal and micro-interaction changes.
+
+- tests/contrast.mjs: 20/20 pairs pass (tokens unchanged).
+- tests/probe.mjs: 60/60 checks, 0 console errors, on two consecutive runs at 1440×900 (full), 390×844 (lite) and 820×1180 (still). The probe now waits for the collection's staggered reveal before opening the reserve dialog; without that wait Playwright's own scroll-into-view could nudge the page by a pixel mid-transition. The lab reports four "GPU stall due to ReadPixels" driver warnings, which come from the probe's own canvas read-back, not from the site.
+- tests/axe.mjs: 0 violations across all 26 states.
+- Frame sheets (renderAt at 0.05–0.25 steps through all six chapters, 1440×900 and 390×844): no empty frames outside the two short dark crossings (now 0.2 of a chapter, with a lamp visible on the approach), no foliage in the lens on the plantation → harvest and harvest → mill crossings (the camera cranes over the rows and the canopy), the roastery lit on arrival.
+- Calm session (`prefers-reduced-motion`): no entrance animation on header, rail or sheet, titles and bags not clipped, pins visible without animation, dialogs without animation, `--m: 0`.
+- Not measured here: real-GPU frame rate with the leaf wind shader and clouds (expected cost: one extra uniform and ~14 point sprites), the feel of the 1.1 s scrub, Safari/Firefox, touch.
+
 # Test results — 2026-11-01 (lab)
 
 Environment: headless Chromium (Playwright 1.63) with SwiftShader (software GPU), 2 cores, served from a local Python static server with no compression. Real-GPU frame rate, touch, Safari/Firefox and screen readers were not tested.

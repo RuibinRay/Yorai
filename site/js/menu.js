@@ -1,4 +1,4 @@
-import { MENU, PROCESSES } from '../data/content.js?v=1';
+import { MENU, PROCESSES } from '../data/content.js?v=2';
 
 const money = (n) => (Number.isInteger(n) ? `${n}` : n.toFixed(2));
 
@@ -18,7 +18,7 @@ export function renderMenu() {
   });
 
   list.innerHTML = MENU.map((m) => `
-    <li class="cup__item" data-process="${m.process}">
+    <li class="cup__item rv" data-process="${m.process}">
       <p class="cup__name">${m.name} <span class="cup__method">${m.method}</span></p>
       <p class="cup__meta"><span><b>${m.process}</b></span><span>${m.variety}</span><span>${m.altitude.toLocaleString('en-US')} m</span></p>
       <p class="cup__notes">${m.notes}</p>
