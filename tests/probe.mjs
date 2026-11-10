@@ -148,6 +148,33 @@ await sweep(820, 1180, 'still', 'tablet-still');
   await ctx.close();
 }
 
+/* The look panel: opens, switches look and detail live, remembers them, closes on Escape */
+{
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const page = await ctx.newPage();
+  const errs = [];
+  page.on('pageerror', (e) => errs.push(e.message));
+  await page.goto(`${base}?tier=lite`, { waitUntil: 'networkidle' });
+  await page.waitForFunction(() => window.__yorai && !document.getElementById('lookBtn').hidden, null, { timeout: 30000 }).catch(() => {});
+  check('look button appears once the scene is ready', await page.evaluate(() => !document.getElementById('lookBtn').hidden));
+  await page.click('#lookBtn');
+  check('look panel opens with focus on the current style', await page.evaluate(() => !document.getElementById('lookPanel').hidden && document.activeElement?.value === 'anime'));
+  await page.keyboard.press('ArrowRight');
+  check('arrow key moves to the next style and applies it', await page.evaluate(() => window.__yorai.state.look === 'pastel'));
+  await page.click('#lookStyles label:has-text("Manga")');
+  check('choosing Manga sets and stores the look', await page.evaluate(() => window.__yorai.state.look === 'manga' && localStorage.getItem('yorai:look') === '"manga"'));
+  await page.click('#lookDetails label:has-text("Light")');
+  check('choosing Light sets the detail', await page.evaluate(() => window.__yorai.state.detail === 'light'));
+  check('the panel never scrolls the page', (await page.evaluate(() => scrollY)) === 0);
+  await page.keyboard.press('Escape');
+  check('Escape closes the look panel and returns focus', await page.evaluate(() => document.getElementById('lookPanel').hidden && document.activeElement?.id === 'lookBtn'));
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.waitForFunction(() => window.__yorai, null, { timeout: 30000 }).catch(() => {});
+  check('look and detail persist across reload', await page.evaluate(() => window.__yorai.state.look === 'manga' && window.__yorai.state.detail === 'light'));
+  check('no errors with the look panel', errs.length === 0, errs.join(' | '));
+  await ctx.close();
+}
+
 await browser.close();
 server.kill();
 writeFileSync(`${OUT}report.json`, JSON.stringify(report, null, 2));

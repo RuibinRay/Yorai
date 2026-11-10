@@ -17,3 +17,18 @@
 - **305 KB of fonts for a wordmark and headings** → the full opsz + wght variable files → `fonttools varLib.instancer` into the four faces the site uses (display opsz 72 with wght 300–500, text opsz 20/24 at 400): 117 KB. Subsetting glyphs alone saved nothing; the axes were the weight.
 - **A tree-shaken three.js bundle saved 20 %, not 60 %** → `WebGLRenderer` pulls in most of the library → not worth a build step for an owner who edits on GitHub; vendored minified module + importmap kept, the attempt recorded in the README.
 - **Playwright's first Tab did not reach the skip link** → after clicks, the sequential-focus starting point follows the last focused element even after `blur()` → test the tab order on a fresh navigation.
+
+## Hit during the anime cel pass (2026-11-10) — toon materials, painted sky, a hand-written post pass
+
+- **A tan floor showed through the harvest ground in sharp polygons, and the roastery floor z-fought in stair-steps** → the mill's yard had been enlarged to 260 units so the horizon would read, but the neighbouring scenes are switched on early and sit 70 units apart → a scene's floor keeps to its own stretch along the journey (wide in x is free); to hide where it stops, dissolve it into the fog colour before the edge (`melt()`), don't make it bigger.
+- **The roastery's wall appeared as a flat rectangle in the sky from the mill** → fully fogged geometry takes the fog colour, which equals the sky only at the horizon; once the sky had a gradient and clouds, anything tall and fogged read as a cut-out → the sky closes into the fog colour during a crossing (`uHaze`), and a tall neighbour is switched on only after that.
+- **Near-black interiors turned navy** → the grade added a constant blue to the shadows → tint by multiplying, never by adding, so black stays black.
+- **The scroll cue stayed on screen for the whole journey** → GSAP's `.from()` leaves `opacity: 1` inline, which beat the stylesheet's scroll-driven `calc()` → `clearProps: 'opacity'` on any tween whose property the stylesheet also drives.
+- **The header showed the wrong section after loading in a hidden pane** → the observer callback only acted on the latest intersecting entry, and with a 0×0 viewport every section intersects → keep the set of intersecting sections and take the first in page order.
+- **Light shafts showed a screen-door pattern** → jittered ray marching at quarter resolution, upsampled → one downsample pass over the result before compositing; and only the sun and its glow feed the shafts, not the lit clouds.
+- **The share image had a half-faded wordmark** → the lab's software GPU starves GSAP's ticker, and lag smoothing then advances the intro 33 ms per frame → finish the intro timeline by hand before the shot.
+- **The mill's yard dissolved into haze everywhere, not only at its edges** → the distance to the edge was computed as `abs(position.z)` in the vertex shader, and a plane has four vertices, all at the edge → pass the signed value as the varying and take `abs` per pixel.
+- **The stage's controls only appeared after the first scroll** → the scene set `state.sceneReady` without announcing it; the pause button had always depended on some later emit → whoever changes shared state calls `emit()`.
+- **The Look panel broke in a browser that had the page open before** → `settings.js?v=3` was cached from before the file gained new exports → the version query is bumped with every change, also between local test runs in a long-lived browser.
+- **A test tool's click scrolled the page 630 px** → clicking an element by reference scrolls it into view, and inside a pinned stage that moves the whole page → focus calls inside the stage use `preventScroll`, and panel behaviour is tested with coordinate clicks.
+

@@ -93,6 +93,7 @@ button { font: inherit; color: inherit; }
 .hdr__brand { display: flex; flex-direction: column; text-decoration: none; line-height: 1.1; }
 .hdr__word { font-family: var(--font-display); font-size: 1.55rem; letter-spacing: 0.36em; font-weight: 500; }
 .hdr__tag { font-size: var(--t-xs); letter-spacing: 0.14em; text-transform: uppercase; color: var(--cream-muted); margin-top: 2px; }
+.hdr:not(.is-paper) .hdr__brand, .hdr:not(.is-paper) .hdr__nav a { text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55); }
 .hdr__nav { display: flex; gap: var(--s-5); align-items: center; }
 .hdr__nav a { font-size: var(--t-sm); letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none; padding: var(--s-2) 0; position: relative; font-variation-settings: 'wght' 500; opacity: 0.86; transition: opacity var(--dur-fast); }
 .hdr__nav a:hover, .hdr__nav a[aria-current='true'] { opacity: 1; }
@@ -167,7 +168,13 @@ html.js:not(.is-calm) .nav-sheet[open] a { animation: fade-up 600ms var(--ease-o
 .jr--webgl:not(.jr--ready) .jr__still { opacity: 1; }
 
 /* letterbox grain and vignette, static (no animation) */
-.jr__vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(120% 100% at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.55) 100%); }
+/* The scenes are bright now, so the frame carries its own shading where text sits: under the header, behind
+   the chapter rail on the right, along the bottom, and the corners (a lens vignette). */
+.jr__vignette { position: absolute; inset: 0; pointer-events: none; background:
+  linear-gradient(180deg, rgba(8, 10, 14, 0.52) 0%, rgba(8, 10, 14, 0) 22%),
+  linear-gradient(0deg, rgba(8, 6, 4, 0.44) 0%, rgba(8, 6, 4, 0) 24%),
+  linear-gradient(270deg, rgba(8, 6, 4, 0.4) 0%, rgba(8, 6, 4, 0) 22%),
+  radial-gradient(120% 100% at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.5) 100%); }
 /* The hand-off: in the last sixth of the cup chapter the stage settles into the page's espresso, and the
    cupping table rises out of it (the menu section carries the matching wash at its top). */
 .jr__fade { position: absolute; inset: 0; pointer-events: none; background: var(--espresso); z-index: 1; opacity: clamp(0, (var(--jt, 0) - 5.84) * 6.25, 1); }
@@ -185,7 +192,7 @@ html.js:not(.is-calm) .nav-sheet[open] a { animation: fade-up 600ms var(--ease-o
 .jr__copy > h2 { --d: 0.025; } .jr__copy > p { --d: 0.05; } .jr__copy > .jr__note { --d: 0.075; } .jr__copy > .jr__rule { --d: 0.09; }
 .jr__copy.is-near { visibility: visible; }
 .jr__copy.is-current { pointer-events: auto; }
-.jr__copy::before { content: ''; position: absolute; inset: -6rem -12rem -8rem calc(-1 * var(--gutter) - 4rem); background: radial-gradient(70% 70% at 30% 60%, rgba(10, 8, 6, 0.6) 0%, rgba(10, 8, 6, 0.35) 45%, rgba(10, 8, 6, 0) 75%); z-index: -1; pointer-events: none; opacity: clamp(0, (var(--pn, 0) - 0.07) * 5, 1); }
+.jr__copy::before { content: ''; position: absolute; inset: -6rem -12rem -8rem calc(-1 * var(--gutter) - 4rem); background: radial-gradient(70% 70% at 30% 60%, rgba(10, 8, 6, 0.8) 0%, rgba(10, 8, 6, 0.52) 45%, rgba(10, 8, 6, 0) 76%); z-index: -1; pointer-events: none; opacity: clamp(0, (var(--pn, 0) - 0.07) * 5, 1); }
 .jr__copy { z-index: 2; }
 .jr__copy .kicker { color: var(--accent); text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5); }
 .jr__copy h2 { font-size: var(--t-xl); margin: var(--s-3) 0 var(--s-4); text-wrap: balance; }
@@ -200,8 +207,10 @@ html.js:not(.is-calm) .nav-sheet[open] a { animation: fade-up 600ms var(--ease-o
   opacity: calc(1 - var(--out)); transform: translateY(calc(var(--out) * -40px * var(--m))) scale(calc(1 + var(--out) * 0.04 * var(--m)));
 }
 .jr__hero h1 { font-size: var(--t-display); letter-spacing: 0.22em; padding-left: 0.22em; font-weight: 300; line-height: 0.95; color: var(--cream); text-shadow: 0 2px 30px rgba(0, 0, 0, 0.5); }
-.jr__hero em { display: block; font-family: var(--font-display); font-style: italic; font-size: var(--t-lg); letter-spacing: 0.02em; color: var(--crema); margin-top: var(--s-3); font-weight: 400; }
-.jr__hero .kicker { color: var(--cream-muted); margin-bottom: var(--s-4); }
+.jr__hero em { display: block; font-family: var(--font-display); font-style: italic; font-size: var(--t-lg); letter-spacing: 0.02em; color: var(--crema); margin-top: var(--s-3); font-weight: 400; text-shadow: 0 1px 14px rgba(0, 0, 0, 0.6); }
+.jr__hero .kicker { color: var(--cream); margin-bottom: var(--s-4); text-shadow: 0 1px 10px rgba(0, 0, 0, 0.6); }
+/* a soft pool of shade behind the wordmark, so it holds against a bright sky */
+.jr__hero::before { content: ''; position: absolute; inset: 18% 8%; z-index: -1; pointer-events: none; background: radial-gradient(50% 50% at 50% 50%, rgba(8, 14, 22, 0.46) 0%, rgba(8, 14, 22, 0.22) 55%, rgba(8, 14, 22, 0) 100%); }
 .jr__scrollcue { position: absolute; bottom: clamp(1.2rem, 4vh, 2.5rem); left: 50%; transform: translateX(-50%); font-size: var(--t-xs); letter-spacing: 0.2em; text-transform: uppercase; color: var(--cream-muted); display: grid; justify-items: center; gap: var(--s-2); pointer-events: none;
 }
 .jr__scrollcue { opacity: calc(1 - clamp(0, var(--jt, 0) * 10, 1)); }
@@ -242,7 +251,26 @@ html.js:not(.is-calm) .jr__rail a { animation: fade-up 800ms var(--ease-out) bot
 .motion-notice :focus-visible { outline-color: var(--brass-ink); }
 
 /* Pause control for the live scene (WCAG 2.2.2) */
-.jr__pause { position: absolute; right: var(--gutter); bottom: clamp(1.2rem, 4vh, 2.5rem); z-index: 3; padding: 0.45rem 1rem; min-height: 40px; font-size: var(--t-xs); }
+.jr__tools { --tools-bottom: clamp(1.2rem, 4vh, 2.5rem); position: absolute; right: var(--gutter); bottom: var(--tools-bottom); z-index: 4; display: flex; gap: var(--s-2); align-items: center; }
+.jr__tools .btn { padding: 0.45rem 1rem; min-height: 40px; font-size: var(--t-xs); background: rgba(18, 12, 9, 0.6); }
+.jr__tools .btn:hover { background: rgba(18, 12, 9, 0.82); }
+.jr__tools .btn[aria-expanded='true'] { background: var(--crema); color: var(--ink); border-color: var(--crema); }
+
+/* Look and detail: the visitor's options for how the journey is drawn (js/look.js) */
+.look { position: absolute; right: var(--gutter); bottom: calc(clamp(1.2rem, 4vh, 2.5rem) + 52px); z-index: 5; width: min(22rem, calc(100% - 2 * var(--gutter)));
+  background: var(--espresso-2); color: var(--cream); border: 1px solid var(--espresso-3); border-radius: 14px; padding: var(--s-4); display: grid; gap: var(--s-4); box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5); }
+.look:not([hidden]) { animation: fade-up 260ms var(--ease-out); }
+.look__set { border: 0; padding: 0; margin: 0; min-width: 0; }
+.look__set legend { padding: 0; margin-bottom: var(--s-2); font-size: var(--t-xs); letter-spacing: var(--track-ui); text-transform: uppercase; color: var(--cream-muted); font-variation-settings: 'wght' 500; }
+.look__opts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.look__opt { position: relative; display: grid; place-items: center; min-height: 40px; border: 1px solid var(--espresso-3); border-radius: 999px; font-size: var(--t-xs); letter-spacing: 0.04em; cursor: pointer;
+  transition: background var(--dur), color var(--dur), border-color var(--dur-fast), transform var(--dur-fast) var(--ease-out); }
+.look__opt input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.look__opt:hover { border-color: var(--brass); }
+.look__opt:active { transform: scale(0.97); }
+.look__opt.is-on { background: var(--crema); color: var(--ink); border-color: var(--crema); }
+.look__opt:has(:focus-visible) { outline: 2px solid var(--crema); outline-offset: 2px; }
+.look__hint { margin-top: var(--s-2); font-size: var(--t-xs); color: var(--cream-muted); min-height: 1.5em; }
 
 /* Diagnostic panel (?why) */
 .why { position: fixed; right: var(--s-4); bottom: var(--s-4); z-index: 70; background: rgba(18, 12, 9, 0.9); color: var(--cream); font: 12px/1.5 ui-monospace, Menlo, monospace; padding: var(--s-3); border: 1px solid var(--espresso-3); max-width: 22rem; white-space: pre-wrap; }
@@ -438,7 +466,7 @@ html.is-calm .rv { transition-duration: 1ms; transition-delay: 0ms; }
 html.is-calm .sec__head h2.rv, html.is-calm .col__card.rv .col__bag { clip-path: none; transition: none; }
 html.is-calm .col__bag svg, html.is-calm .btn { transition: none; }
 html.is-calm .dlg[open], html.is-calm .nav-sheet[open], html.is-calm .dlg.is-closing, html.is-calm .nav-sheet.is-closing,
-html.is-calm .dlg[open]::backdrop, html.is-calm .nav-sheet[open]::backdrop, html.is-calm .frm__err:not(:empty), html.is-calm .frm__status:not(:empty) { animation: none; }
+html.is-calm .dlg[open]::backdrop, html.is-calm .nav-sheet[open]::backdrop, html.is-calm .frm__err:not(:empty), html.is-calm .frm__status:not(:empty), html.is-calm .look:not([hidden]) { animation: none; }
 
 @media (prefers-reduced-motion: reduce) {
   /* belt and braces for the moment before the early script has run */
@@ -477,7 +505,9 @@ html.is-calm .dlg[open]::backdrop, html.is-calm .nav-sheet[open]::backdrop, html
   .jr__hero h1 { letter-spacing: 0.14em; padding-left: 0.14em; }
   .hdr__tag { display: none; }
   .hdr__word { font-size: 1.3rem; }
-  .jr__pause { right: var(--gutter); bottom: 1rem; }
+  .jr__tools { --tools-bottom: 1rem; }
+  .look { bottom: calc(1rem + 50px); }
+  .jr__scrollcue { left: var(--gutter); transform: none; justify-items: start; } /* the stage's buttons reach the middle on a phone */
   .cal { grid-template-columns: repeat(6, 1fr); }
   .cup__item { grid-template-columns: 1fr; grid-template-areas: 'name' 'meta' 'notes' 'price'; }
   .cup__price { justify-self: start; }

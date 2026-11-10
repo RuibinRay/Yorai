@@ -1,5 +1,5 @@
-import { BRAND } from '../data/content.js?v=2';
-import { validate, isEmail, mailto } from './forms.js?v=2';
+import { BRAND } from '../data/content.js?v=4';
+import { validate, isEmail, mailto } from './forms.js?v=4';
 
 export function renderContact() {
   document.getElementById('ctcDetails').innerHTML = `

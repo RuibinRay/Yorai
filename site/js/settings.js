@@ -35,3 +35,11 @@ export function explicitTier() {
   const t = params.get('tier');
   return TIERS.includes(t) ? t : null;
 }
+
+/* The visitor's look and detail for the journey (set from the panel in look.js). `?look=` and `?detail=`
+ * win on load, so a look can be linked to or tested; the panel's own choice is what gets remembered. */
+export const LOOK_IDS = ['anime', 'pastel', 'manga', 'film'];
+export const DETAIL_IDS = ['auto', 'high', 'balanced', 'light'];
+const pick = (key, ids) => { const q = params.get(key); if (ids.includes(q)) return q; const v = get(key, ids[0]); return ids.includes(v) ? v : ids[0]; };
+export const look = () => pick('look', LOOK_IDS);
+export const detail = () => pick('detail', DETAIL_IDS);

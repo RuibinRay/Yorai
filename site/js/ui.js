@@ -1,5 +1,5 @@
 /* Small shared UI helpers: animated dialog close, reveal stagger indices. */
-import { isCalm } from './settings.js?v=2';
+import { isCalm } from './settings.js?v=4';
 
 /* Close a native <dialog> after its leave animation (the `.is-closing` keyframes in site.css).
  * Under calm motion, or if the animation never ends (e.g. display: none), it closes at once. */
