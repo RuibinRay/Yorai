@@ -26,12 +26,12 @@
       } catch (e) {}
     })();
   </script>
-  <link rel="stylesheet" href="css/tokens.css?v=2">
-  <link rel="stylesheet" href="css/site.css?v=2">
+  <link rel="stylesheet" href="css/tokens.css?v=4">
+  <link rel="stylesheet" href="css/site.css?v=4">
   <script type="importmap">{ "imports": { "three": "./vendor/three.module.js" } }</script>
   <script src="vendor/gsap.min.js" defer></script>
   <script src="vendor/ScrollTrigger.min.js" defer></script>
-  <script type="module" src="js/main.js?v=2"></script>
+  <script type="module" src="js/main.js?v=4"></script>
 </head>
 <body>
   <a class="skip" href="#menu">Skip the journey, go to the menu</a>
@@ -97,7 +97,22 @@
         <div id="copies"></div>
 
         <nav class="jr__rail" id="rail" aria-label="Chapters"></nav>
-        <button class="jr__pause btn btn--ghost" id="pause" type="button" aria-pressed="false" hidden>Pause scene</button>
+        <div class="jr__tools" id="stageTools">
+          <button class="btn btn--ghost" id="lookBtn" type="button" aria-expanded="false" aria-controls="lookPanel" hidden>Look</button>
+          <button class="jr__pause btn btn--ghost" id="pause" type="button" aria-pressed="false" hidden>Pause scene</button>
+        </div>
+        <div class="look" id="lookPanel" role="group" aria-label="How the journey is drawn" hidden>
+          <fieldset class="look__set">
+            <legend>Style</legend>
+            <div class="look__opts" id="lookStyles"></div>
+            <p class="look__hint" id="lookStyleHint" aria-live="polite"></p>
+          </fieldset>
+          <fieldset class="look__set">
+            <legend>Detail</legend>
+            <div class="look__opts" id="lookDetails"></div>
+            <p class="look__hint" id="lookDetailHint" aria-live="polite"></p>
+          </fieldset>
+        </div>
       </div>
       <div id="spaces"></div>
     </section>

@@ -1,11 +1,12 @@
-import { BRAND, CHAPTERS } from '../data/content.js?v=2';
-import * as settings from './settings.js?v=2';
-import { renderMenu } from './menu.js?v=2';
-import { renderCollection } from './collection.js?v=2';
-import { renderStory } from './story.js?v=2';
-import { renderOrigins } from './origins.js?v=2';
-import { renderContact } from './contact.js?v=2';
-import { closeDialog, staggerReveals } from './ui.js?v=2';
+import { BRAND, CHAPTERS } from '../data/content.js?v=4';
+import * as settings from './settings.js?v=4';
+import { renderMenu } from './menu.js?v=4';
+import { renderCollection } from './collection.js?v=4';
+import { renderStory } from './story.js?v=4';
+import { renderOrigins } from './origins.js?v=4';
+import { renderContact } from './contact.js?v=4';
+import { closeDialog, staggerReveals } from './ui.js?v=4';
+import { initLook } from './look.js?v=4';
 
 const $ = (s, r = document) => r.querySelector(s);
 const html = document.documentElement;
@@ -22,6 +23,8 @@ const state = {
   jt: 0,
   chapter: 0,
   live: false,
+  look: settings.look(),     // anime | pastel | manga | film
+  detail: settings.detail(), // auto | high | balanced | light
 };
 const listeners = new Set();
 export function onState(fn) { listeners.add(fn); return () => listeners.delete(fn); }
@@ -53,14 +56,18 @@ applyCalm();
 /* ------------------------------------------------------------------ */
 const hdr = $('#hdr');
 const navLinks = [...document.querySelectorAll('.hdr__nav a')];
+/* The section under the header band is the first, in page order, of those touching it. Tracking the whole
+ * set (not just the latest entry) keeps this right even when the page was laid out while hidden. */
+const sections = [...document.querySelectorAll('main > section')];
+const onBand = new Set();
 const sectionObs = new IntersectionObserver((entries) => {
-  entries.forEach((e) => {
-    if (!e.isIntersecting) return;
-    hdr.classList.toggle('is-paper', e.target.classList.contains('sec--paper'));
-    navLinks.forEach((a) => a.setAttribute('aria-current', a.getAttribute('href') === '#' + e.target.id ? 'true' : 'false'));
-  });
+  entries.forEach((e) => { if (e.isIntersecting) onBand.add(e.target); else onBand.delete(e.target); });
+  const cur = sections.find((sec) => onBand.has(sec));
+  if (!cur) return;
+  hdr.classList.toggle('is-paper', cur.classList.contains('sec--paper'));
+  navLinks.forEach((a) => a.setAttribute('aria-current', a.getAttribute('href') === '#' + cur.id ? 'true' : 'false'));
 }, { rootMargin: '-10% 0px -85% 0px' });
-document.querySelectorAll('main > section').forEach((s) => sectionObs.observe(s));
+sections.forEach((sec) => sectionObs.observe(sec));
 
 /* Mobile nav sheet */
 const sheet = $('#navSheet');
@@ -191,7 +198,7 @@ if (state.tier === 'still' || state.tier === 'text') {
   jr.classList.add('jr--still');
   if (state.tier === 'text') jr.classList.add('jr--text');
 } else {
-  const start = () => import('./journey3d.js?v=2').then((m) => m.mount({ host: $('#canvasHost'), jr, stage, state, onState, explicit: !!settings.explicitTier(), jtFromY })).catch((err) => {
+  const start = () => import('./journey3d.js?v=4').then((m) => m.mount({ host: $('#canvasHost'), jr, stage, state, onState, emit, explicit: !!settings.explicitTier(), jtFromY })).catch((err) => {
     console.error('3D journey failed, falling back to still scenes', err);
     state.tier = 'still'; state.tierReason = 'scene failed: ' + (err && err.message);
     jr.classList.remove('jr--webgl'); jr.classList.add('jr--still');
@@ -211,6 +218,9 @@ pauseBtn.addEventListener('click', () => {
 });
 onState((s) => { pauseBtn.hidden = !(s.sceneReady && !s.calm); jr.classList.toggle('jr--calm', s.calm); });
 
+/* Look and detail: the visitor's options for how the journey is drawn */
+initLook({ state, emit, onState });
+
 /* ------------------------------------------------------------------ */
 /* ?why diagnostic                                                      */
 /* ------------------------------------------------------------------ */
@@ -226,6 +236,7 @@ if (settings.params.has('why')) {
       `gpu: ${state.gpu || '—'}`,
       `fps: ${state.fps == null ? '—' : state.fps.toFixed(0)}`,
       `scene: ${state.sceneReady ? 'ready' : 'not mounted'}${state.paused ? ', paused' : ''}`,
+      `look: ${state.look}  detail: ${state.detail}`,
       `jt: ${state.jt.toFixed(2)}  chapter: ${state.chapter}`,
       `viewport: ${innerWidth}×${innerHeight} dpr ${devicePixelRatio}`,
     ].join('\n');
@@ -258,5 +269,5 @@ if (!state.calm && window.gsap) {
     .from(h1, { opacity: 0.3, y: 18, letterSpacing: '0.34em', duration: 1.4 }, 0.1)
     .from(em, { opacity: 0, y: 10, duration: 0.9 }, 0.7)
     .from(hero.querySelector('.kicker'), { opacity: 0, duration: 0.8 }, 0.4)
-    .from('#scrollcue', { opacity: 0, duration: 0.8 }, 1.2);
+    .from('#scrollcue', { opacity: 0, duration: 0.8, clearProps: 'opacity' }, 1.2); // cleared, or the inline value would keep the cue on screen for the whole journey
 }

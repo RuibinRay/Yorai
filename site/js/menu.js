@@ -1,4 +1,4 @@
-import { MENU, PROCESSES } from '../data/content.js?v=2';
+import { MENU, PROCESSES } from '../data/content.js?v=4';
 
 const money = (n) => (Number.isInteger(n) ? `${n}` : n.toFixed(2));
 

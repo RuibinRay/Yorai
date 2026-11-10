@@ -1,28 +1,24 @@
-import { COLLECTION, BRAND } from '../data/content.js?v=2';
-import { validate, isEmail, mailto, copyText } from './forms.js?v=2';
-import { closeDialog } from './ui.js?v=2';
+import { COLLECTION, BRAND } from '../data/content.js?v=4';
+import { validate, isEmail, mailto, copyText } from './forms.js?v=4';
+import { closeDialog } from './ui.js?v=4';
 
-/* A bag drawn in code: one gradient per bag, label ink from the data. */
+/* A bag drawn in code, in the journey's cel style: one flat colour, one hard shade, one hard light, an ink line. */
 function bagSVG(b) {
-  const id = 'g-' + b.id;
+  const body = 'M36 70 Q36 52 54 50 L246 50 Q264 52 264 70 L270 390 Q270 406 254 406 L46 406 Q30 406 30 390 Z';
   return `
   <svg viewBox="0 0 300 420" role="img" aria-label="${b.name} bag, ${b.process} process">
-    <defs>
-      <linearGradient id="${id}" x1="0" x2="1" y1="0" y2="0">
-        <stop offset="0" stop-color="${b.hue}" stop-opacity="0.82"/>
-        <stop offset="0.45" stop-color="${b.hue}"/>
-        <stop offset="1" stop-color="${b.hue}" stop-opacity="0.72"/>
-      </linearGradient>
-      <linearGradient id="${id}-s" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0" stop-color="#000" stop-opacity="0.18"/>
-        <stop offset="0.12" stop-color="#000" stop-opacity="0"/>
-      </linearGradient>
-    </defs>
-    <path d="M36 70 Q36 52 54 50 L246 50 Q264 52 264 70 L270 390 Q270 406 254 406 L46 406 Q30 406 30 390 Z" fill="url(#${id})"/>
-    <path d="M36 70 Q36 52 54 50 L246 50 Q264 52 264 70 L270 390 Q270 406 254 406 L46 406 Q30 406 30 390 Z" fill="url(#${id}-s)"/>
-    <path d="M54 50 L246 50 L240 34 Q150 22 60 34 Z" fill="${b.hue}" opacity="0.9"/>
-    <path d="M60 34 Q150 22 240 34" fill="none" stroke="${b.ink}" stroke-opacity="0.35" stroke-width="2"/>
-    <rect x="128" y="24" width="44" height="6" rx="3" fill="#c4985a"/>
+    <defs><clipPath id="clip-${b.id}"><path d="${body}"/></clipPath></defs>
+    <path d="${body}" fill="${b.hue}"/>
+    <g clip-path="url(#clip-${b.id})">
+      <path d="M208 40 C198 150 206 290 216 420 L300 420 L300 40 Z" fill="${b.ink}" opacity="0.2"/>
+      <path d="M30 374 Q150 394 270 374 L270 420 L30 420 Z" fill="${b.ink}" opacity="0.14"/>
+      <path d="M45 68 C41 160 39 280 41 394 L55 394 C52 280 54 160 59 68 Z" fill="#fff" opacity="0.34"/>
+    </g>
+    <path d="M54 50 L246 50 L240 34 Q150 22 60 34 Z" fill="${b.hue}"/>
+    <path d="M150 27 Q196 28 240 34 L246 50 L150 50 Z" fill="${b.ink}" opacity="0.16"/>
+    <path d="${body}" fill="none" stroke="${b.ink}" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M54 50 L60 34 Q150 22 240 34 L246 50" fill="none" stroke="${b.ink}" stroke-width="3" stroke-linejoin="round"/>
+    <rect x="128" y="23" width="44" height="7" rx="3.5" fill="#c4985a" stroke="${b.ink}" stroke-width="2"/>
     <g fill="${b.ink}" font-family="Hanken Grotesk Variable, Arial, sans-serif">
       <text x="150" y="128" text-anchor="middle" font-family="Newsreader Display, Georgia, serif" font-size="44" letter-spacing="10" font-weight="500">YORAI</text>
       <text x="150" y="150" text-anchor="middle" font-size="11" letter-spacing="3.5">CAFÉ DE ALTURA · TARRAZÚ</text>
@@ -31,7 +27,7 @@ function bagSVG(b) {
       <text x="150" y="252" text-anchor="middle" font-size="12" letter-spacing="3">${b.process.toUpperCase()} · ${b.variety.toUpperCase()}</text>
       <text x="150" y="272" text-anchor="middle" font-size="12" letter-spacing="2" opacity="0.8">${b.altitude}</text>
       <line x1="90" y1="300" x2="210" y2="300" stroke="${b.ink}" stroke-width="1" opacity="0.5"/>
-      <text x="150" y="332" text-anchor="middle" font-size="12" font-style="italic" font-family="Newsreader Display, Georgia, serif" font-size="15">${b.notes}</text>
+      <text x="150" y="332" text-anchor="middle" font-size="13" font-style="italic" font-family="Newsreader Display, Georgia, serif">${b.notes}</text>
       <text x="150" y="376" text-anchor="middle" font-size="10" letter-spacing="2.5" opacity="0.75">${b.sizes[0].g} G · ROAST: ${b.roast.toUpperCase()}</text>
     </g>
   </svg>`;

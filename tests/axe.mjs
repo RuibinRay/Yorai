@@ -1,4 +1,4 @@
-/* axe-core at every chapter, every section, and with the reserve dialog and nav sheet open. */
+/* axe-core at every chapter, every section, and with the reserve dialog, the nav sheet and the look panel open. */
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -23,6 +23,9 @@ for (const [w, h] of [[1440, 900], [390, 844]]) {
   for (const id of ['menu', 'collection', 'story', 'origins', 'contact']) { await page.evaluate((id) => document.getElementById(id).scrollIntoView({ behavior: 'instant' }), id); await page.waitForTimeout(1300); await run(id); }
   await page.click('[data-reserve="neblina"]'); await page.waitForTimeout(200); await run('reserve dialog open'); await page.keyboard.press('Escape');
   if (w < 900) { await page.click('#menuOpen'); await page.waitForTimeout(200); await run('nav sheet open'); await page.keyboard.press('Escape'); }
+  // the look panel belongs to the live scene; on this still tier it is shown by hand so its markup and contrast are checked
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' })); await page.waitForTimeout(400);
+  await page.evaluate(() => { const b = document.getElementById('lookBtn'); b.hidden = false; b.click(); }); await page.waitForTimeout(400); await run('look panel open');
   await page.close();
 }
 await browser.close(); server.kill();

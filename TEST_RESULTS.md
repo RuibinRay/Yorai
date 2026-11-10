@@ -1,3 +1,17 @@
+# Test results — 2026-11-10, anime cel pass
+
+Lab: headless Chromium with SwiftShader (software GPU), as below. Real GPU: the Claude desktop browser pane on an Apple M2 (ANGLE Metal).
+
+- tests/contrast.mjs: 20/20 pairs pass (tokens unchanged).
+- tests/probe.mjs: 69/69 checks, 0 console errors, at 1440×900 (full), 390×844 (lite) and 820×1180 (still). Nine of the checks are new and cover the Look panel: it appears when the scene is ready, opens with focus on the current style, follows the arrow keys, sets and stores a style and a detail level, never scrolls the page, closes on Escape with focus returned, and persists across a reload. The four warnings are the driver's "ReadPixels" notices from the probe's own canvas read-back.
+- tests/axe.mjs: 0 violations across all 28 states (the Look panel open, at both widths, is new).
+- Looks: Anime, Pastel, Manga and Film rendered through `renderAt` at four to six chapters each, 1440×900; Manga also confirmed on the real GPU by switching from the panel. Detail: buffer size and multisampling read back for Auto, High, Balanced and Light on both tiers at 2× device pixels (full tier 2880×1800 with 2× multisampling → 1800×1125 → 1440×900 and back; lite tier 585×1266 → 780×1688 with multisampling → 487×1055 → 390×844 and back), no WebGL errors.
+- Frame sheets through `renderAt` (all six chapters, every crossing at 0.04–0.1 steps, 1440×900 full; 390×844 and 820×1180 lite at 2× device pixels): cel shading, ink lines, sky, bloom and shafts present; no neighbouring floor showing through another (the mill's yard had been; it now keeps to its slot); the roastery's wall no longer reads as a rectangle against the sky during the mill → roast crossing (the sky closes into haze first).
+- Calm session (`prefers-reduced-motion`): held poses render through the same post pass; the notice appears; no entrance animation.
+- `?nopost`: the cel scene draws straight to the canvas with no errors.
+- Real GPU (Apple M2, 2048×1536 buffer, 2× multisampling, full post pass): 3.8–8.0 ms per frame measured synchronously per chapter (plantation the heaviest), no WebGL errors, no console output. Not a frame-rate measurement of a scrolling session, and not a phone.
+- Not measured: phone GPUs (the lite tier now renders at up to 1.5× with a three-level bloom; the watchdog is the safety net), Safari and Firefox, touch.
+
 # Test results — 2026-11-01, cinematic pass (lab)
 
 Same lab as below (headless Chromium, SwiftShader). Re-run after the camera-path, atmosphere, entrance/reveal and micro-interaction changes.
