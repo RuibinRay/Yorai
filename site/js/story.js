@@ -1,4 +1,4 @@
-import { STORY } from '../data/content.js?v=4';
+import { STORY } from '../data/content.js?v=5';
 
 const PHASES = { harvest: 'Harvest', drying: 'Drying & resting', flowering: 'Flowering', growth: 'Growth', ripening: 'Ripening' };
 

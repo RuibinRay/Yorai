@@ -1,6 +1,6 @@
-import { COLLECTION, BRAND } from '../data/content.js?v=4';
-import { validate, isEmail, mailto, copyText } from './forms.js?v=4';
-import { closeDialog } from './ui.js?v=4';
+import { COLLECTION, BRAND } from '../data/content.js?v=5';
+import { validate, isEmail, mailto, copyText } from './forms.js?v=5';
+import { closeDialog } from './ui.js?v=5';
 
 /* A bag drawn in code, in the journey's cel style: one flat colour, one hard shade, one hard light, an ink line. */
 function bagSVG(b) {

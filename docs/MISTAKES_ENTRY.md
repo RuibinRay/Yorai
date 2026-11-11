@@ -32,3 +32,11 @@
 - **The Look panel broke in a browser that had the page open before** → `settings.js?v=3` was cached from before the file gained new exports → the version query is bumped with every change, also between local test runs in a long-lived browser.
 - **A test tool's click scrolled the page 630 px** → clicking an element by reference scrolls it into view, and inside a pinned stage that moves the whole page → focus calls inside the stage use `preventScroll`, and panel behaviour is tested with coordinate clicks.
 
+## Hit during the scenery pass (2026-11-10) — volcano, field, crossings, room and yard detail
+
+- **The volcano read as a hill** → it stood 55 units away, 22 high, a straight-sided cone in one flat colour, and the scene's distance fog had already reduced it to a silhouette → distance and size come first (110 units away, 46 high), then the profile (concave, with a crater), then its own haze instead of the scene fog (`distant()`), heavier at the foot, with lines of hills in front for depth.
+- **A water channel hung alone in the white of a crossing** → custom shader materials ignore the scene's fog unless they include the fog chunks → `fog: true`, `UniformsLib.fog` and the four fog includes on every `ShaderMaterial` that sits in a scene (water, crema).
+- **The mist's wisps looked like lens bokeh** → a sprite texture with a solid core, drawn lighter than the fog → no core, larger, fewer, and only a little lighter than the fog (dimmer still in the dark rooms).
+- **`flatShading` warned on the toon material** → `MeshToonMaterial` does not declare it → an unindexed icosphere already gives each face its own normal, so the boulders are flat without it.
+- **A redeclared `back` broke the roastery build** → the drum already had a `back` plate when the room got a back wall → name scenery by what it is (`backWall`), and run `node --check` after every patch.
+
