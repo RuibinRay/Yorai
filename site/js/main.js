@@ -1,12 +1,12 @@
-import { BRAND, CHAPTERS } from '../data/content.js?v=4';
-import * as settings from './settings.js?v=4';
-import { renderMenu } from './menu.js?v=4';
-import { renderCollection } from './collection.js?v=4';
-import { renderStory } from './story.js?v=4';
-import { renderOrigins } from './origins.js?v=4';
-import { renderContact } from './contact.js?v=4';
-import { closeDialog, staggerReveals } from './ui.js?v=4';
-import { initLook } from './look.js?v=4';
+import { BRAND, CHAPTERS } from '../data/content.js?v=5';
+import * as settings from './settings.js?v=5';
+import { renderMenu } from './menu.js?v=5';
+import { renderCollection } from './collection.js?v=5';
+import { renderStory } from './story.js?v=5';
+import { renderOrigins } from './origins.js?v=5';
+import { renderContact } from './contact.js?v=5';
+import { closeDialog, staggerReveals } from './ui.js?v=5';
+import { initLook } from './look.js?v=5';
 
 const $ = (s, r = document) => r.querySelector(s);
 const html = document.documentElement;
@@ -198,7 +198,7 @@ if (state.tier === 'still' || state.tier === 'text') {
   jr.classList.add('jr--still');
   if (state.tier === 'text') jr.classList.add('jr--text');
 } else {
-  const start = () => import('./journey3d.js?v=4').then((m) => m.mount({ host: $('#canvasHost'), jr, stage, state, onState, emit, explicit: !!settings.explicitTier(), jtFromY })).catch((err) => {
+  const start = () => import('./journey3d.js?v=5').then((m) => m.mount({ host: $('#canvasHost'), jr, stage, state, onState, emit, explicit: !!settings.explicitTier(), jtFromY })).catch((err) => {
     console.error('3D journey failed, falling back to still scenes', err);
     state.tier = 'still'; state.tierReason = 'scene failed: ' + (err && err.message);
     jr.classList.remove('jr--webgl'); jr.classList.add('jr--still');

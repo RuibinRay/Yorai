@@ -1,3 +1,14 @@
+# Test results — 2026-11-10, scenery pass (volcano, field, crossings, room and yard detail)
+
+Lab: headless Chromium with SwiftShader, as below. Real GPU: the Claude desktop browser pane on an Apple M2 (ANGLE Metal).
+
+- tests/contrast.mjs: 20/20. tests/probe.mjs: 69/69 checks, 0 console errors. tests/axe.mjs: 0 violations in 28 states.
+- Frame sheets through `renderAt`: the plantation at 0.02–0.7, every crossing at 0.04–0.06 steps (the lift, the mist closing, the white-out with wisps, the next place emerging), the mill, the roastery from arrival to close-up, the pour and the cup, at 1440×900 full; the reworked chapters at 390×844 lite and 2× device pixels. All four looks on the new field and roastery.
+- One place at a time: at the midpoint of each crossing the fog density is about 0.97, so nothing beyond two or three units is visible when the neighbours change over.
+- `?nopost` and a reduced-motion session render without errors.
+- Real GPU (2048×1536 buffer, 2× multisampling, full post pass), synchronous per-frame time: plantation about 9.5–12 ms (it was about 8 ms before the field, trees and far landscape), the lift over the rows 7.4 ms, mid-crossing 7.2 ms, harvest 6.5 ms, mill 7.7 ms, roastery 7.6 ms, pour 7.8 ms, cup 4.3 ms. The pane's timer is noisy by a couple of milliseconds. Not a frame-rate measurement of a scrolling session, and not a phone.
+- Not measured: phone GPUs, Safari and Firefox, touch.
+
 # Test results — 2026-11-10, anime cel pass
 
 Lab: headless Chromium with SwiftShader (software GPU), as below. Real GPU: the Claude desktop browser pane on an Apple M2 (ANGLE Metal).

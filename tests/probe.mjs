@@ -46,7 +46,7 @@ async function sweep(width, height, tier, label) {
     const y = jrTop + lens.slice(0, i).reduce((a, b) => a + b, 0) + (i === 0 ? 10 : Math.round(lens[i] * 0.45));
     await page.evaluate((y) => window.scrollTo({ top: y, behavior: 'instant' }), y);
     // wait until the driver has processed the scroll (the lab's software GPU can block the main thread)
-    await page.waitForFunction((i) => Number(document.querySelector('#stage').dataset.chapter) === i, i, { timeout: 8000 }).catch(() => {});
+    await page.waitForFunction((i) => Number(document.querySelector('#stage').dataset.chapter) === i, i, { timeout: 30000 }).catch(() => {}); // a first visit to a chapter builds its scene and compiles its shaders, which takes the software GPU many seconds
     await page.waitForTimeout(tier === 'still' ? 500 : 900);
     const st = await page.evaluate(() => ({ y: scrollY, chapter: document.querySelector('#stage').dataset.chapter, jt: getComputedStyle(document.querySelector('#stage')).getPropertyValue('--jt') }));
     await snap(page, `${OUT}${label}-ch${i}.png`);
