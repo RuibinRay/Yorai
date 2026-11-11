@@ -1,8 +1,8 @@
-import { COLLECTION, BRAND, GIFT, ART } from '../data/content.js?v=6';
-import { validate, isEmail, mailto, copyText } from './forms.js?v=6';
-import { closeDialog, picture, SHAPE, tilt } from './ui.js?v=6';
-import { cart } from './cart.js?v=6';
-import { openProduct, onReserve } from './product.js?v=6';
+import { COLLECTION, BRAND, GIFT, ART } from '../data/content.js?v=7';
+import { validate, isEmail, mailto, copyText } from './forms.js?v=7';
+import { closeDialog, picture, SHAPE, tilt } from './ui.js?v=7';
+import { cart } from './cart.js?v=7';
+import { openProduct, onReserve } from './product.js?v=7';
 
 const bagOf = (id) => COLLECTION.find((b) => b.id === id);
 

@@ -1,13 +1,13 @@
-import { BRAND, CHAPTERS } from '../data/content.js?v=6';
-import * as settings from './settings.js?v=6';
-import { renderMenu } from './menu.js?v=6';
-import { renderCollection } from './collection.js?v=6';
-import { renderStory } from './story.js?v=6';
-import { renderOrigins } from './origins.js?v=6';
-import { renderContact } from './contact.js?v=6';
-import { closeDialog, staggerReveals } from './ui.js?v=6';
-import { initLook } from './look.js?v=6';
-import { initCart } from './cart.js?v=6';
+import { BRAND, CHAPTERS } from '../data/content.js?v=7';
+import * as settings from './settings.js?v=7';
+import { renderMenu } from './menu.js?v=7';
+import { renderCollection } from './collection.js?v=7';
+import { renderStory } from './story.js?v=7';
+import { renderOrigins } from './origins.js?v=7';
+import { renderContact } from './contact.js?v=7';
+import { closeDialog, staggerReveals } from './ui.js?v=7';
+import { initLook } from './look.js?v=7';
+import { initCart } from './cart.js?v=7';
 
 const $ = (s, r = document) => r.querySelector(s);
 const html = document.documentElement;
@@ -199,7 +199,7 @@ if (state.tier === 'still' || state.tier === 'text') {
   jr.classList.add('jr--still');
   if (state.tier === 'text') jr.classList.add('jr--text');
 } else {
-  const start = () => import('./journey3d.js?v=6').then((m) => m.mount({ host: $('#canvasHost'), jr, stage, state, onState, emit, explicit: !!settings.explicitTier(), jtFromY })).catch((err) => {
+  const start = () => import('./journey3d.js?v=7').then((m) => m.mount({ host: $('#canvasHost'), jr, stage, state, onState, emit, explicit: !!settings.explicitTier(), jtFromY })).catch((err) => {
     console.error('3D journey failed, falling back to still scenes', err);
     state.tier = 'still'; state.tierReason = 'scene failed: ' + (err && err.message);
     jr.classList.remove('jr--webgl'); jr.classList.add('jr--still');

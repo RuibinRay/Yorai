@@ -21,8 +21,8 @@ const PAL = [
   { fog: '#cfe8d6', top: '#3688d6', dens: 0.05, sky: '#e6f3e2', ground: '#3d5a2a', sun: '#fff3d2', dir: [0.6, 1, 0.3], sunI: 2.0, hemiI: 1.25, exp: 1.05, cloud: 0.5, cloudLit: '#ffffff', cloudShade: '#a6c2e2', disc: 0, rays: 0, ink: 0.9, bloom: 0.5, sat: 1.2 },
   { fog: '#f2e8cc', top: '#4d9bd8', dens: 0.024, sky: '#f6eedb', ground: '#7a6a50', sun: '#fff6dc', dir: [0.2, 1, 0.45], sunI: 1.9, hemiI: 1.3, exp: 1.08, cloud: 0.42, cloudLit: '#fffaf0', cloudShade: '#b4c4da', disc: 0, rays: 0, ink: 0.9, bloom: 0.5, sat: 1.15 },
   { fog: '#1a0c08', top: '#070302', dens: 0.038, sky: '#6a4630', ground: '#2a1810', sun: '#ff9a52', dir: [0.4, 0.6, 0.5], sunI: 0.5, hemiI: 0.9, exp: 1.0, cloud: 0, cloudLit: '#3a2016', cloudShade: '#1a0c08', disc: 0, rays: 0, ink: 0.6, bloom: 0.55, sat: 1.15 },
-  { fog: '#1f130d', top: '#0d0704', dens: 0.085, sky: '#50382a', ground: '#15100c', sun: '#ffd9ae', dir: [-0.5, 1, 0.4], sunI: 1.6, hemiI: 0.8, exp: 1.05, cloud: 0, cloudLit: '#50382a', cloudShade: '#1f130d', disc: 0, rays: 0, ink: 0.7, bloom: 0.85, sat: 1.12 },
-  { fog: '#0c0806', top: '#050302', dens: 0.11, sky: '#2a1c12', ground: '#0c0806', sun: '#ffe9ca', dir: [0.1, 1, 0.15], sunI: 1.0, hemiI: 0.5, exp: 1.0, cloud: 0, cloudLit: '#2a1c12', cloudShade: '#0c0806', disc: 0, rays: 0, ink: 0.7, bloom: 0.5, sat: 1.12 },
+  { fog: '#dccfb6', top: '#cdbb9c', dens: 0.03, sky: '#fff8ea', ground: '#a89478', sun: '#fff4e0', dir: [-0.45, 1, 0.55], sunI: 1.45, hemiI: 1.05, exp: 1.04, cloud: 0, cloudLit: '#dccfb6', cloudShade: '#b59f80', disc: 0, rays: 0, ink: 0.85, bloom: 0.4, sat: 1.1 },
+  { fog: '#e2d6be', top: '#d2c1a2', dens: 0.026, sky: '#fff8ea', ground: '#ac9878', sun: '#fff5e2', dir: [-0.4, 1, 0.5], sunI: 1.5, hemiI: 1.08, exp: 1.04, cloud: 0, cloudLit: '#e2d6be', cloudShade: '#bba585', disc: 0, rays: 0, ink: 0.85, bloom: 0.38, sat: 1.1 },
 ];
 /* Looks the visitor can choose between. Each is a preset over the same scene: the shading ramp, the rim
  * light, how much ink and what colour, colour and contrast in the grade, bloom, grain, a vignette, the
@@ -37,14 +37,16 @@ const LOOKS = {
 /* Camera poses in group-local space: a = start, b = end of the environment (reached at p = 1 − cross,
  * 0.72 by default), then the crossing to the next chapter's a. A crossing rises by `lift` at its middle
  * (up over the rows, low under the mill's shade cloth, level into the roaster's drum) while the mist
- * closes; `cross` shortens it where the way is dark. */
+ * closes; `cross` shortens it where the way is dark, and `late` keeps a dark room's light until the mist
+ * has closed, so its walls are never seen going by. `pan` frames the last pose for the shape of the screen:
+ * the cup sits beside the words on a wide screen, above them on a narrower one, above them and centred on a phone. */
 const CAM = [
   { a: [0, 3.4, 15], al: [0, 1.0, -12], b: [0.3, 1.75, -9], bl: [-0.6, 1.3, -34], lift: 9 },
   { a: [1.4, 1.25, 3.3], al: [-0.4, 1.6, -0.2], b: [-0.5, 1.25, 2.9], bl: [1.5, 0.85, 0.9], lift: 6 },
   { a: [-7.5, 2.6, 9.5], al: [0, 0.9, 0], b: [4.0, 1.9, 1.6], bl: [6.5, 0.4, -5], lift: 1.5 },
-  { a: [4.6, 2.3, 8.2], al: [0, 1.6, 0], b: [0.9, 1.85, 3.5], bl: [0, 1.45, -1], cross: 0.2, lift: 0.3 },
-  { a: [3.3, 2.1, 3.7], al: [0.2, 1.3, 0], b: [-1.1, 2.0, 2.6], bl: [0.45, 1.3, 0], cross: 0.2, lift: 1.5 },
-  { a: [2.5, 1.85, 2.7], al: [0, 0.95, 0], b: [0.22, 2.75, 0.5], bl: [-0.22, 0.9, 0] },
+  { a: [4.6, 2.3, 8.2], al: [0, 1.6, 0], b: [0.9, 1.85, 3.5], bl: [0, 1.45, -1], cross: 0.2, lift: 0.3, late: true },
+  { a: [3.3, 2.1, 3.7], al: [0.2, 1.3, 0], b: [-1.1, 2.0, 2.6], bl: [-0.35, 1.3, 0], cross: 0.2, lift: 1.5 },
+  { a: [2.5, 1.85, 2.7], al: [0, 0.95, 0], b: [0.22, 2.75, 0.5], bl: [-0.21, 0.9, 0.18], pan: { tall: [0.54, 0.02], narrow: [0.29, 0.22] } },
 ];
 
 /* ---------------------------------------------------------------- textures */
@@ -203,15 +205,15 @@ function tileTex() {
   }, [26, 26]);
 }
 /* Planks: four boards to a tile, a few lines of grain, a knot here and there, ink seams. */
-function woodTex(repeat) {
+function woodTex(repeat, { hue = 26, sat = 44, light = 46 } = {}) {
   return canvasTex(256, (g, S) => {
     const h = S / 4;
     for (let k = 0; k < 4; k++) {
-      const lt = 46 + rnd() * 10, y0 = k * h;
-      g.fillStyle = `hsl(${26 + rnd() * 6}, 44%, ${lt}%)`; g.fillRect(0, y0, S, h);
-      g.strokeStyle = `hsla(24, 46%, ${lt - 12}%, 0.7)`; g.lineWidth = 1.5;
+      const lt = light + rnd() * 10, y0 = k * h;
+      g.fillStyle = `hsl(${hue + rnd() * 6}, ${sat}%, ${lt}%)`; g.fillRect(0, y0, S, h);
+      g.strokeStyle = `hsla(${hue - 2}, ${sat + 2}%, ${lt - 12}%, 0.7)`; g.lineWidth = 1.5;
       for (let l = 0; l < 4; l++) { const yy = y0 + 8 + l * (h - 16) / 3 + rnd() * 4; g.beginPath(); g.moveTo(0, yy); g.bezierCurveTo(S * 0.3, yy + rnd() * 8 - 4, S * 0.7, yy + rnd() * 8 - 4, S, yy); g.stroke(); }
-      if (rnd() < 0.6) { const kx = 30 + rnd() * (S - 60), ky = y0 + h / 2; g.fillStyle = `hsl(22, 48%, ${lt - 16}%)`; g.beginPath(); g.ellipse(kx, ky, 9, 5, 0, 0, Math.PI * 2); g.fill(); }
+      if (rnd() < 0.6) { const kx = 30 + rnd() * (S - 60), ky = y0 + h / 2; g.fillStyle = `hsl(${hue - 4}, ${sat + 4}%, ${lt - 16}%)`; g.beginPath(); g.ellipse(kx, ky, 9, 5, 0, 0, Math.PI * 2); g.fill(); }
       g.fillStyle = '#2a170d'; g.fillRect(0, y0, S, 2.5);
       g.fillRect(((k * 97) % S), y0, 2.5, h);   // where one board ends and the next begins
     }
@@ -818,40 +820,311 @@ function buildRoast(tier) {
   return g;
 }
 
+/* ---- pieces shared by the two rooms at the end of the journey: the tasting room and the table by the window ---- */
+/* Glazed wall tiles laid like brickwork: cream faces a shade apart, a lit top edge, a shaded foot, grey grout. */
+function glazeTex(repeat) {
+  return canvasTex(256, (g, S) => {
+    g.fillStyle = '#b3a48d'; g.fillRect(0, 0, S, S);
+    const tw = S / 2, th = S / 4;
+    for (let r = 0; r < 4; r++) for (let k = -1; k < 3; k++) {
+      const x = k * tw + (r % 2 ? tw / 2 : 0), y = r * th;
+      g.fillStyle = `hsl(${38 + rnd() * 6}, 40%, ${87 + rnd() * 6}%)`; g.fillRect(x + 2, y + 2, tw - 4, th - 4);
+      g.fillStyle = 'rgba(255,255,255,0.6)'; g.fillRect(x + 2, y + 2, tw - 4, 5);
+      g.fillStyle = 'rgba(120,96,60,0.18)'; g.fillRect(x + 2, y + th - 9, tw - 4, 7);
+    }
+  }, repeat);
+}
+/* Limewashed plaster: one warm tone, cloudy, with a little wear. Every cloud is drawn across the tile's edges too, so it repeats without a seam. */
+function plasterTex(repeat) {
+  return canvasTex(256, (g, S) => {
+    g.fillStyle = '#f4ecdb'; g.fillRect(0, 0, S, S);
+    for (let i = 0; i < 40; i++) {
+      const x = rnd() * S, y = rnd() * S, rx = 18 + rnd() * 44, ry = 10 + rnd() * 24, rot = rnd() * 3;
+      g.fillStyle = i % 2 ? 'rgba(255,253,246,0.26)' : 'rgba(188,172,144,0.075)';
+      for (const [ox, oy] of [[0, 0], [S, 0], [-S, 0], [0, S], [0, -S]]) { g.beginPath(); g.ellipse(x + ox, y + oy, rx, ry, rot, 0, Math.PI * 2); g.fill(); }
+    }
+  }, repeat);
+}
+/* A straight rod between two points, and a lathe from a list of [radius, height] pairs. */
+function rod(a, b, r, mat, seg = 12) {
+  const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b);
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, A.distanceTo(B), seg), mat);
+  m.position.copy(A).add(B).multiplyScalar(0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), B.clone().sub(A).normalize());
+  return m;
+}
+const lathe = (pts, seg, mat) => new THREE.Mesh(new THREE.LatheGeometry(pts.map(([x, y]) => new THREE.Vector2(x, y)), seg), mat);
+/* A room open toward the way in: floor, a back wall and two side walls, a boarded ceiling on beams, a skirting board.
+ * `hole` leaves the back wall open where a window is, in pieces that share the one wall's plaster. */
+function room(g, { w, d, h, zc, floor, wall, hole }) {
+  const fl = new THREE.Mesh(new THREE.PlaneGeometry(w, d).rotateX(-Math.PI / 2), floor); fl.position.z = zc; g.add(fl);
+  const piece = (x0, x1, y0, y1) => {
+    const geo = new THREE.PlaneGeometry(x1 - x0, y1 - y0), uv = geo.attributes.uv;
+    for (let k = 0; k < uv.count; k++) uv.setXY(k, (x0 + uv.getX(k) * (x1 - x0) + w / 2) / w, (y0 + uv.getY(k) * (y1 - y0)) / h);
+    const m = new THREE.Mesh(geo, wall); m.position.set((x0 + x1) / 2, (y0 + y1) / 2, zc - d / 2); g.add(m);
+  };
+  if (hole) { const l = hole.x - hole.w / 2, r = hole.x + hole.w / 2, b = hole.y - hole.h / 2, t = hole.y + hole.h / 2; piece(-w / 2, l, 0, h); piece(r, w / 2, 0, h); piece(l, r, 0, b); piece(l, r, t, h); }
+  else piece(-w / 2, w / 2, 0, h);
+  [[-1, Math.PI / 2], [1, -Math.PI / 2]].forEach(([side, ry]) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(d, h), wall); m.rotation.y = ry; m.position.set(side * w / 2, h / 2, zc); g.add(m); });
+  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(w, d).rotateX(Math.PI / 2), cel({ map: woodTex([w / 3, d / 3], { hue: 30, sat: 24, light: 44 }), rim: 0 })); ceil.position.set(0, h, zc); g.add(ceil);
+  const timber = cel({ color: '#6a4c38', rim: 0 });
+  for (let z = zc - d / 2 + 1.2; z < zc + d / 2; z += 2.6) { const beam = new THREE.Mesh(new THREE.BoxGeometry(w, 0.26, 0.22), timber); beam.position.set(0, h - 0.13, z); g.add(beam); }
+  const skirt = new THREE.Mesh(new THREE.BoxGeometry(w, 0.16, 0.05), timber); skirt.position.set(0, 0.08, zc - d / 2 + 0.03); g.add(skirt);
+}
+/* A window in the back wall and the daylight it throws: a bright pane with glazing bars in a timber frame, a
+ * shaft of soft-edged sheets down to `land` (a height: the floor, or a table top), and the pool where it lands.
+ * All of it takes the scene's fog, so the mist of a crossing covers it. */
+function daylight(g, { x, y, z, w, h, dir, land = 0, shaft = 0.1, pool = 0.3 }) {
+  const pc = document.createElement('canvas'); pc.width = 160; pc.height = Math.round(160 * h / w);
+  const c2 = pc.getContext('2d'), H = pc.height;
+  const sky = c2.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, '#dff0ff'); sky.addColorStop(0.55, '#fff6e2'); sky.addColorStop(1, '#ffe9bf'); c2.fillStyle = sky; c2.fillRect(0, 0, 160, H);
+  c2.fillStyle = 'rgba(120,170,120,0.55)'; c2.beginPath(); c2.moveTo(0, H); c2.lineTo(0, H * 0.72); c2.quadraticCurveTo(50, H * 0.6, 96, H * 0.74); c2.quadraticCurveTo(130, H * 0.66, 160, H * 0.7); c2.lineTo(160, H); c2.fill();   // hills beyond the glass
+  c2.fillStyle = '#5a4030'; [[0, 0, 160, 7], [0, H - 7, 160, 7], [0, 0, 7, H], [153, 0, 7, H], [77, 0, 6, H], [0, H / 2 - 3, 160, 6]].forEach((r) => c2.fillRect(...r));
+  const pane = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: finish(new THREE.CanvasTexture(pc)), transparent: true }));
+  pane.material.color.multiplyScalar(1.5); pane.position.set(x, y, z + 0.02); g.add(pane);
+  const timber = cel({ color: '#6a4c38', rim: 0 });
+  const sill = new THREE.Mesh(new THREE.BoxGeometry(w + 0.3, 0.08, 0.28), timber); sill.position.set(x, y - h / 2 - 0.04, z + 0.14); g.add(sill);
+  [[x - w / 2 - 0.05, y, 0.1, h + 0.2], [x + w / 2 + 0.05, y, 0.1, h + 0.2], [x, y + h / 2 + 0.05, w + 0.2, 0.1]].forEach(([fx, fy, fw, fh]) => { const f = new THREE.Mesh(new THREE.BoxGeometry(fw, fh, 0.16), timber); f.position.set(fx, fy, z); g.add(f); });
+  const sc = document.createElement('canvas'); sc.width = sc.height = 64;
+  const s2 = sc.getContext('2d');
+  const across = s2.createLinearGradient(0, 0, 64, 0); across.addColorStop(0, 'rgba(255,255,255,0)'); across.addColorStop(0.3, 'rgba(255,255,255,1)'); across.addColorStop(0.7, 'rgba(255,255,255,1)'); across.addColorStop(1, 'rgba(255,255,255,0)');
+  s2.fillStyle = across; s2.fillRect(0, 0, 64, 64);
+  const along = s2.createLinearGradient(0, 0, 0, 64); along.addColorStop(0, 'rgba(0,0,0,1)'); along.addColorStop(0.75, 'rgba(0,0,0,0.3)'); along.addColorStop(1, 'rgba(0,0,0,0)');
+  s2.globalCompositeOperation = 'destination-in'; s2.fillStyle = along; s2.fillRect(0, 0, 64, 64);
+  const d = new THREE.Vector3(...dir).normalize(), pos = [], uv = [], sheets = 7;
+  for (let k = 0; k < sheets; k++) {
+    const yy = y - h / 2 + (k / (sheets - 1)) * h, reach = (yy - land) / -d.y;
+    const a = new THREE.Vector3(x - w / 2, yy, z + 0.05), b = new THREE.Vector3(x + w / 2, yy, z + 0.05);
+    const c = b.clone().addScaledVector(d, reach), e = a.clone().addScaledVector(d, reach);
+    [[a, 0, 1], [b, 1, 1], [c, 1, 0], [a, 0, 1], [c, 1, 0], [e, 0, 0]].forEach(([v, u, t]) => { pos.push(v.x, v.y, v.z); uv.push(u, t); });
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.add(new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: finish(new THREE.CanvasTexture(sc)), color: '#fff3d6', transparent: true, opacity: shaft, depthWrite: false, side: THREE.DoubleSide })));
+  const reach = (y - land) / -d.y;
+  const spot = new THREE.Mesh(new THREE.CircleGeometry(1, 40).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: softDot(128, 0.1), color: '#fff0cc', transparent: true, opacity: pool, depthWrite: false }));
+  spot.scale.set(w * 0.75, 1, h * 0.7); spot.position.set(x + d.x * reach, land + 0.012, z + d.z * reach); spot.visible = pool > 0; g.add(spot);
+  return pane;
+}
+/* The picture printed round the house cup, as on the house's own cups: ridges in mist, the name above them.
+ * One canvas, wrapped once round the cup; it is also the print that hangs in the room. */
+let cupArtTex = null;
+function cupArt() {
+  if (cupArtTex) return cupArtTex;
+  const W = 2048, H = 300, c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  ['#d6c9b1', '#bdab8e', '#9c8769', '#77634b'].forEach((tone, k) => {
+    const base = H * (0.64 + k * 0.1), amp = H * (0.12 - k * 0.012);
+    g.fillStyle = tone; g.beginPath(); g.moveTo(0, H);
+    for (let x = 0; x <= W; x += 8) {
+      const a = x / W * Math.PI * 2;                                        // whole turns only, so the picture meets itself round the back
+      let y = base - amp * (0.55 * Math.sin(a * (2 + k) + k * 1.7) + 0.3 * Math.sin(a * (5 + 2 * k) + k) + 0.15 * Math.sin(a * (11 + k * 3)));
+      if (k === 1) y -= H * 0.22 * Math.max(0, 1 - Math.abs(x - W * 0.555) / 150) ** 1.4;   // the volcano, under the name
+      g.lineTo(x, y);
+    }
+    g.lineTo(W, H); g.fill();
+    const mist = g.createLinearGradient(0, base, 0, base + amp * 1.5); mist.addColorStop(0, 'rgba(246,238,224,0)'); mist.addColorStop(1, 'rgba(246,238,224,0.5)');
+    g.fillStyle = mist; g.fillRect(0, base, W, amp * 1.5);
+  });
+  g.fillStyle = g.strokeStyle = '#4b392b'; g.textAlign = 'center';
+  g.font = '500 60px Georgia, "Times New Roman", serif';
+  'YORAI'.split('').forEach((ch, k) => g.fillText(ch, W / 2 + (k - 2) * 62, H * 0.3));
+  g.font = '15px Georgia, "Times New Roman", serif';
+  'CAFÉ DE COSTA RICA'.split('').forEach((ch, k, all) => g.fillText(ch, W / 2 + (k - (all.length - 1) / 2) * 13.5, H * 0.395));
+  g.lineWidth = 2; [-1, 1].forEach((side) => { g.beginPath(); g.moveTo(W / 2 + side * 132, H * 0.378); g.lineTo(W / 2 + side * 172, H * 0.378); g.stroke(); });
+  g.lineWidth = 3; g.lineJoin = 'round'; g.beginPath(); g.moveTo(W / 2 - 60, 40); g.lineTo(W / 2 - 22, 18); g.lineTo(W / 2 - 6, 28); g.lineTo(W / 2 + 12, 12); g.lineTo(W / 2 + 60, 40); g.stroke();
+  return (cupArtTex = finish(new THREE.CanvasTexture(c)));
+}
+/* The sun through a window's four panes, lying on a top (a bar, a table): the window projected along its
+ * light onto that height and drawn on a canvas the size of the top, so nothing falls outside it. */
+function sunPanes(g, win, top) {
+  const d = new THREE.Vector3(...win.dir).normalize(), S = 160;   // pixels to the unit
+  const c = document.createElement('canvas'); c.width = Math.round(top.w * S); c.height = Math.round(top.d * S);
+  const k = c.getContext('2d'); k.fillStyle = '#fff'; k.shadowColor = '#fff'; k.shadowBlur = 14;
+  const at = (wx, wy) => { const reach = (wy - top.y) / -d.y; return [(wx + d.x * reach - top.x + top.w / 2) * S, (win.z + d.z * reach - top.z + top.d / 2) * S]; };
+  const bar = 0.05;
+  for (const i of [0, 1]) for (const j of [0, 1]) {
+    const x0 = win.x - win.w / 2 + i * win.w / 2 + bar, x1 = x0 + win.w / 2 - 2 * bar, y0 = win.y - win.h / 2 + j * win.h / 2 + bar, y1 = y0 + win.h / 2 - 2 * bar;
+    k.beginPath(); [[x0, y0], [x1, y0], [x1, y1], [x0, y1]].forEach(([wx, wy], n) => { const [px, py] = at(wx, wy); if (n) k.lineTo(px, py); else k.moveTo(px, py); }); k.fill();
+  }
+  const geo = top.round ? new THREE.CircleGeometry(top.w / 2, 64) : new THREE.PlaneGeometry(top.w, top.d);
+  const m = new THREE.Mesh(geo.rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: finish(new THREE.CanvasTexture(c)), color: '#ffe2bd', transparent: true, opacity: top.opacity ?? 0.2, depthWrite: false, blending: THREE.AdditiveBlending }));
+  m.position.set(top.x, top.y + 0.003, top.z); m.renderOrder = 1; g.add(m);
+}
+/* A porcelain cup on its saucer, as in the house's own pictures: cream, with a gilded lip, edge and handle and
+ * the printed band. The name faces +z and the handle +x; the group is returned so a cup can be turned and filled. */
+function houseCup(g, x, y, z, sc = 1) {
+  const cupG = new THREE.Group(); cupG.position.set(x, y, z); cupG.scale.setScalar(sc); g.add(cupG);
+  const porcelain = cel({ color: '#f6eee0', roughness: 0.3, side: THREE.DoubleSide }), gilt = cel({ color: '#d9ac5a', metalness: 0.9, roughness: 0.25 });
+  cupG.add(lathe([[0, 0.012], [0.2, 0.012], [0.3, 0], [0.5, 0.035], [0.555, 0.07], [0.54, 0.082], [0.3, 0.036], [0.2, 0.03], [0, 0.03]], 96, porcelain));
+  const edge = new THREE.Mesh(new THREE.TorusGeometry(0.548, 0.009, 8, 96), gilt); edge.rotation.x = Math.PI / 2; edge.position.y = 0.077; cupG.add(edge);
+  const wall = [[0.035, 0.2], [0.11, 0.275], [0.22, 0.325], [0.34, 0.352]];     // the outside of the cup: [height, radius]
+  const body = lathe([[0, 0], [0.15, 0], [0.165, 0.02], ...wall.map(([h, r]) => [r, h]), [0.336, 0.34], [0.31, 0.22], [0.26, 0.115], [0.18, 0.052], [0, 0.046]], 96, porcelain); body.position.y = 0.03; cupG.add(body);
+  const lip = new THREE.Mesh(new THREE.TorusGeometry(0.344, 0.0085, 8, 96), gilt); lip.rotation.x = Math.PI / 2; lip.position.y = 0.372; cupG.add(lip);
+  const ear = new THREE.CatmullRomCurve3([new THREE.Vector3(0.33, 0.31, 0), new THREE.Vector3(0.45, 0.33, 0), new THREE.Vector3(0.5, 0.24, 0), new THREE.Vector3(0.44, 0.14, 0), new THREE.Vector3(0.3, 0.12, 0)]);
+  cupG.add(new THREE.Mesh(new THREE.TubeGeometry(ear, 28, 0.02, 10, false), gilt));
+  // the printed band: a skin just outside the wall, at even heights so the picture is not stretched
+  const radiusAt = (h) => { for (let k = 1; k < wall.length; k++) if (h <= wall[k][0]) return wall[k - 1][1] + (wall[k][1] - wall[k - 1][1]) * (h - wall[k - 1][0]) / (wall[k][0] - wall[k - 1][0]); return wall[wall.length - 1][1]; };
+  const band = lathe(Array.from({ length: 13 }, (_, k) => { const h = 0.05 + (k / 12) * 0.275; return [radiusAt(h) + 0.0025, h]; }), 96, cel({ map: cupArt(), transparent: true, depthWrite: false, rim: 0 }));
+  band.position.y = 0.03; band.rotation.y = Math.PI; cupG.add(band);
+  return cupG;
+}
+/* The glass server the coffee is brewed into. Returns the group and the coffee in it: a cylinder 0.24 tall whose foot is at 0.02. */
+function glassServer() {
+  const s = new THREE.Group();
+  const glass = cel({ color: '#eef6f6', transparent: true, opacity: 0.13, side: THREE.DoubleSide, rim: 1.1, spec: 1 });
+  s.add(lathe([[0, 0], [0.3, 0], [0.34, 0.03], [0.34, 0.2], [0.31, 0.3], [0.2, 0.4], [0.18, 0.47], [0.21, 0.5]], 72, glass));
+  const grip = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.02, 8, 24, Math.PI), glass); grip.position.set(-0.33, 0.2, 0); grip.rotation.z = Math.PI / 2; s.add(grip);
+  const coffee = new THREE.Mesh(new THREE.CylinderGeometry(0.312, 0.312, 0.24, 40), cel({ color: '#4a2410', roughness: 0.3 })); coffee.position.y = 0.14; s.add(coffee);
+  return { s, coffee };
+}
+/* A table top drawn large, because the last shot looks straight down on it: wide boards, long grain that wanders, a knot here and there. */
+function tableTex() {
+  return canvasTex(1024, (g, S) => {
+    const n = 5, h = S / n;
+    for (let k = 0; k < n; k++) {
+      const y0 = k * h, lt = 34 + rnd() * 7, hue = 22 + rnd() * 5, ph = rnd() * 6, amp = 4 + rnd() * 6;
+      g.fillStyle = `hsl(${hue}, 33%, ${lt}%)`; g.fillRect(0, y0, S, h);
+      for (let m = 0; m < 5; m++) { g.fillStyle = 'rgba(255,214,160,0.09)'; g.beginPath(); g.ellipse(rnd() * S, y0 + rnd() * h, 120 + rnd() * 160, 8 + rnd() * 10, 0, 0, Math.PI * 2); g.fill(); }
+      for (let l = 0; l < 22; l++) {
+        const yy = y0 + 7 + (l / 21) * (h - 14);
+        g.strokeStyle = `hsla(${hue - 3}, 42%, ${lt - 8 - rnd() * 8}%, ${0.3 + rnd() * 0.4})`; g.lineWidth = 1 + rnd() * 2.2; g.beginPath();
+        for (let x = 0; x <= S; x += 32) { const w = Math.sin(x / S * Math.PI * 2 + ph) * amp + Math.sin(x / S * Math.PI * 6 + ph * 2 + l * 0.2) * 2; if (x) g.lineTo(x, yy + w); else g.moveTo(x, yy + w); }
+        g.stroke();
+      }
+      if (rnd() < 0.7) {
+        const kx = 80 + rnd() * (S - 160), ky = y0 + h * (0.3 + rnd() * 0.4);
+        for (let ring = 4; ring > 0; ring--) { g.strokeStyle = `hsla(22, 50%, ${lt - 14 - ring}%, 0.8)`; g.lineWidth = 2; g.beginPath(); g.ellipse(kx, ky, ring * 9, ring * 4.5, 0, 0, Math.PI * 2); g.stroke(); }
+        g.fillStyle = `hsl(20, 50%, ${lt - 24}%)`; g.beginPath(); g.ellipse(kx, ky, 7, 4, 0, 0, Math.PI * 2); g.fill();
+      }
+      g.fillStyle = 'rgba(52,28,14,0.9)'; g.fillRect(0, y0, S, 3);            // where two boards meet
+      g.fillStyle = 'rgba(255,232,192,0.25)'; g.fillRect(0, y0 + 3, S, 2);    // and the lit edge of the next one
+    }
+  });
+}
+/* A folded napkin from above: linen, a stitched hem in the house's gold, the shade of its fold. */
+function napkinTex() {
+  return canvasTex(256, (g, S) => {
+    g.fillStyle = '#f2ebde'; g.fillRect(0, 0, S, S);
+    for (let k = 0; k < S; k += 4) { g.fillStyle = `rgba(170,150,118,${0.1 + rnd() * 0.12})`; g.fillRect(0, k, S, 1.5); g.fillRect(k, 0, 1.5, S); }
+    const fold = g.createLinearGradient(S * 0.52, 0, S * 0.7, 0); fold.addColorStop(0, 'rgba(120,96,66,0.3)'); fold.addColorStop(1, 'rgba(120,96,66,0)'); g.fillStyle = fold; g.fillRect(S * 0.52, 0, S * 0.18, S);
+    g.strokeStyle = '#c59a4e'; g.lineWidth = 3; g.setLineDash([9, 6]); g.strokeRect(14, 14, S - 28, S - 28);
+  });
+}
+/* The soft shadow something standing on a table leaves, pushed a little away from the window. */
+function restShadow(g, x, y, z, r, strength = 0.42) {
+  const m = new THREE.Mesh(new THREE.CircleGeometry(1, 32).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: softDot(128, 0.2), color: '#2e170a', transparent: true, opacity: strength, depthWrite: false }));
+  m.scale.set(r, 1, r); m.position.set(x + r * 0.12, y, z + r * 0.2); m.renderOrder = 2; g.add(m);
+}
+
 function buildBrew(tier) {
   const g = new THREE.Group();
-  g.add(new THREE.Mesh(new THREE.PlaneGeometry(40, 40).rotateX(-Math.PI / 2), cel({ color: '#17100b', roughness: 1, rim: 0 })));
-  const table = new THREE.Mesh(new THREE.BoxGeometry(4, 0.08, 2.2), cel({ map: woodTex([2, 1.2]), color: '#8a5f45', rim: 0 })); table.position.y = 0.76; g.add(table);
-  const ceramic = cel({ color: '#f0e7da', roughness: 0.35 });
-  const glass = new THREE.MeshPhysicalMaterial({ color: '#dfe8ea', roughness: 0.05, metalness: 0, transparent: true, opacity: 0.26, side: THREE.DoubleSide });
-  const carafe = new THREE.Mesh(new THREE.LatheGeometry([[0, 0], [0.44, 0], [0.5, 0.25], [0.46, 0.42], [0.3, 0.5], [0.3, 0.56], [0.0, 0.56]].map(([x, y]) => new THREE.Vector2(x, y)), 72), glass);
-  carafe.position.y = 0.8; g.add(carafe);
-  const coffee = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.34, 32), cel({ color: '#2a140a', roughness: 0.3 })); coffee.position.y = 0.8 + 0.17; coffee.scale.y = 0.001; g.add(coffee); g.userData.coffee = coffee;
-  const dripper = new THREE.Mesh(new THREE.LatheGeometry([[0.08, 0], [0.12, 0.06], [0.42, 0.36], [0.46, 0.38], [0.4, 0.38], [0.1, 0.1], [0.06, 0.1]].map(([x, y]) => new THREE.Vector2(x, y)), 72), cel({ color: '#f0e7da', roughness: 0.35, side: THREE.DoubleSide }));
-  dripper.position.y = 1.36; g.add(dripper);
-  const bed = new THREE.Mesh(new THREE.CircleGeometry(0.3, 32).rotateX(-Math.PI / 2), cel({ color: '#3b2314', roughness: 0.95 })); bed.position.y = 1.36 + 0.24; g.add(bed); g.userData.bed = bed;
-  // kettle
-  const kettle = new THREE.Group(); kettle.position.set(1.35, 0.8, 0.35);
-  const body = new THREE.Mesh(new THREE.LatheGeometry([[0, 0], [0.5, 0], [0.52, 0.3], [0.4, 0.55], [0.14, 0.62], [0.14, 0.7], [0, 0.7]].map(([x, y]) => new THREE.Vector2(x, y)), 72), cel({ color: '#1b1b1d', metalness: 0.6, roughness: 0.45 }));
-  kettle.add(body);
-  const handle = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.035, 8, 24, Math.PI), cel({ color: '#3b2a1f', roughness: 0.7 })); handle.position.set(0, 0.62, 0); handle.rotation.y = Math.PI / 2; kettle.add(handle);
-  g.add(kettle);
-  const neck = new THREE.CatmullRomCurve3([new THREE.Vector3(0.95, 1.15, 0.35), new THREE.Vector3(0.7, 1.55, 0.2), new THREE.Vector3(0.4, 1.92, 0.08), new THREE.Vector3(0.16, 1.9, 0.02)]);
-  g.add(new THREE.Mesh(new THREE.TubeGeometry(neck, 24, 0.035, 8, false), cel({ color: '#1b1b1d', metalness: 0.6, roughness: 0.45 })));
-  const stream = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.016, 0.3, 8), new THREE.MeshPhysicalMaterial({ color: '#cfe3e8', transparent: true, opacity: 0.55, roughness: 0.05 }));
-  stream.position.set(0.12, 1.9 - 0.15, 0.02); stream.scale.y = 0.001; g.add(stream); g.userData.stream = stream;
-  const steam = points(tier === 'lite' ? 30 : 60, 0.3, '#ffffff', 0.06, softDot());
-  const sp = steam.geometry.attributes.position; for (let i = 0; i < sp.count; i++) sp.setXYZ(i, between(-0.3, 0.3), between(1.75, 2.6), between(-0.3, 0.3));
-  g.add(steam); g.userData.steam = steam;
-  // a scale and a jar
-  const scale = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.05, 0.6), cel({ color: '#222', roughness: 0.6, rim: 0 })); scale.position.set(0, 0.805, 0); g.add(scale);
-  const jar = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.5, 24), glass); jar.position.set(-1.3, 1.05, -0.4); g.add(jar);
-  const jarBeans = instanced(ellipsoidGeo(0.05), cel({ color: '#3a2112', roughness: 0.7 }), 120);
-  for (let i = 0; i < 120; i++) { const a = rnd() * 6.28, r = Math.sqrt(rnd()) * 0.19; dummy.position.set(-1.3 + Math.cos(a) * r, 0.84 + rnd() * 0.36, -0.4 + Math.sin(a) * r); dummy.rotation.set(rnd() * 3, rnd() * 3, 0); dummy.scale.setScalar(1); dummy.updateMatrix(); jarBeans.setMatrixAt(i, dummy.matrix); }
+  // the tasting room: a boarded floor, tiled to chest height, plaster above, daylight from a window on the left
+  // the window stands where the journey goes on: the visitor leaves through it, into the mist
+  const BACK = -3.4, TOP = 0.84, win = { x: -1.0, y: 3.0, z: BACK, w: 2.6, h: 2.5, dir: [1.1, -2.7, 3.3] };
+  room(g, { w: 15, d: 16.4, h: 5.2, zc: 4.8, hole: win, floor: cel({ map: woodTex([6, 8], { hue: 30, sat: 26, light: 38 }), rim: 0 }), wall: cel({ map: plasterTex([4, 2]), rim: 0 }) });
+  const tiles = new THREE.Mesh(new THREE.PlaneGeometry(15, 1.5), cel({ map: glazeTex([25, 2.5]), rim: 0 })); tiles.position.set(0, 0.75, BACK + 0.012); g.add(tiles);
+  const timber = cel({ color: '#6a4c38', rim: 0 }), walnut = cel({ map: woodTex([2.2, 1], { hue: 32, sat: 30, light: 52 }), rim: 0 });
+  const dado = new THREE.Mesh(new THREE.BoxGeometry(15, 0.09, 0.07), timber); dado.position.set(0, 1.54, BACK + 0.04); g.add(dado);
+  g.userData.pane = daylight(g, { ...win, land: TOP, shaft: 0.1, pool: 0 });
+  // shelves on the right: cups, jars, and the four coffees in their own colours
+  [2.85, 3.7].forEach((y) => { const board = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.07, 0.4), timber); board.position.set(3.6, y, BACK + 0.22); g.add(board); });
+  const ceramic = cel({ color: '#f4ecdf', roughness: 0.35, side: THREE.DoubleSide });
+  for (let i = 0; i < 5; i++) { const c = lathe([[0, 0], [0.09, 0], [0.13, 0.13], [0.14, 0.18], [0.125, 0.18], [0.1, 0.02], [0, 0.02]], 24, ceramic); c.position.set(1.75 + i * 0.36, 2.885, BACK + 0.22); g.add(c); }
+  [['#9fb7b1', 3.75], ['#e0b35b', 4.12], ['#c04a4a', 4.49], ['#e8dcc8', 4.86]].forEach(([hue, x]) => { const bag = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.44, 0.13), cel({ color: hue })); bag.position.set(x, 3.105, BACK + 0.22); bag.rotation.y = between(-0.15, 0.15); g.add(bag); });
+  const jarGlass = cel({ color: '#eef6f6', transparent: true, opacity: 0.16, side: THREE.DoubleSide, rim: 1.1 });
+  for (let i = 0; i < 4; i++) {
+    const x = 2.0 + i * 0.62, jar = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.42, 20, 1, true), jarGlass); jar.position.set(x, 3.945, BACK + 0.22); g.add(jar);
+    const fill = new THREE.Mesh(new THREE.CylinderGeometry(0.135, 0.135, 0.26 + (i % 2) * 0.08, 20), cel({ color: i % 2 ? '#4a2a16' : '#7a5a34' })); fill.position.set(x, 3.87 + (i % 2) * 0.04, BACK + 0.22); g.add(fill);
+    const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.04, 20), timber); lid.position.set(x, 4.175, BACK + 0.22); g.add(lid);
+  }
+  // pendant lamps over the bar
+  [-2.2, 0.5, 3.2].forEach((x) => g.add(practical(x, 3.55, 0.25, '#ffe2b4', 1.5)));
+  const barLight = new THREE.PointLight('#ffe6c0', 9, 16, 1.4); barLight.position.set(0.4, 3.3, 1.0); g.add(barLight);
+
+  // the bar: a thick walnut top on a painted cabinet, the window's sun lying across it
+  const counter = new THREE.Mesh(new THREE.BoxGeometry(6.6, 0.1, 2.5), cel({ map: woodTex([3.3, 1.25], { hue: 22, sat: 34, light: 27 }), rim: 0 })); counter.position.y = TOP - 0.05; g.add(counter);
+  const cabinet = new THREE.Mesh(new THREE.BoxGeometry(6.4, 0.74, 2.3), cel({ color: '#35544c', rim: 0 })); cabinet.position.y = 0.37; g.add(cabinet);
+  sunPanes(g, win, { x: 0, z: 0, w: 6.6, d: 2.5, y: TOP, opacity: 0.2 });
+
+  // ---- the brewing station ----
+  const brass = cel({ color: '#cda65c', metalness: 0.9, roughness: 0.25 }), copper = cel({ color: '#a5603f', metalness: 0.9, roughness: 0.28 }), steel = cel({ color: '#26262a', metalness: 0.7, roughness: 0.4 });
+  const slab = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.07, 1.05), walnut); slab.position.set(0.3, TOP + 0.035, 0); g.add(slab);
+  const S0 = TOP + 0.07;                                           // the top of the slab
+  // a scale under the server, its display lit
+  const scale = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.05, 0.66), steel); scale.position.set(0, S0 + 0.025, 0); g.add(scale);
+  const dc = document.createElement('canvas'); dc.width = 128; dc.height = 32;
+  const dg = dc.getContext('2d'); dg.fillStyle = '#120c08'; dg.fillRect(0, 0, 128, 32); dg.fillStyle = '#ffc266'; dg.font = '600 20px ui-monospace, Menlo, monospace'; dg.textBaseline = 'middle'; dg.fillText('250 g', 8, 17); dg.fillText('2:45', 76, 17);
+  const display = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.09), new THREE.MeshBasicMaterial({ map: finish(new THREE.CanvasTexture(dc)) })); display.material.color.multiplyScalar(1.6);
+  display.position.set(0, S0 + 0.052, 0.27); display.rotation.x = -Math.PI / 2; g.add(display);
+  const SV = S0 + 0.05;                                            // where the server stands
+  // the glass server, and the coffee that rises in it
+  const { s: server, coffee } = glassServer(); server.position.y = SV; g.add(server); coffee.scale.y = 0.001;
+  Object.assign(g.userData, { coffee, coffeeBase: 0.02, coffeeH: 0.24, serverY: SV });
+  // the stand: a brass column, a ring that holds the dripper, an arm that carries the water over it
+  const DY = 1.42;                                                 // the dripper's foot
+  g.add(rod([0.62, S0, -0.3], [0.62, 2.42, -0.3], 0.03, brass));
+  const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.04, 24), brass); foot.position.set(0.62, S0 + 0.02, -0.3); g.add(foot);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.215, 0.016, 10, 48), brass); ring.rotation.x = Math.PI / 2; ring.position.set(0, DY + 0.19, 0); g.add(ring);
+  g.add(rod([0.62, DY + 0.19, -0.3], [0.19, DY + 0.19, -0.09], 0.016, brass));
+  // the dripper: a porcelain cone with a foot, a paper filter standing proud of its rim, the bed of grounds
+  const dripper = lathe([[0.05, 0], [0.075, 0.02], [0.37, 0.39], [0.41, 0.41], [0.395, 0.425], [0.35, 0.395], [0.065, 0.04], [0.045, 0.03]], 72, ceramic); dripper.position.y = DY; g.add(dripper);
+  const paper = lathe([[0.05, 0.035], [0.375, 0.45]], 48, cel({ color: '#fffaf0', side: THREE.DoubleSide, rim: 0 })); paper.position.y = DY; g.add(paper);
+  const BED = DY + 0.31;
+  const bed = new THREE.Mesh(new THREE.CircleGeometry(0.262, 40).rotateX(-Math.PI / 2), cel({ color: '#3b2314', rim: 0 })); bed.position.y = BED; g.add(bed);
+  const bloom = new THREE.Mesh(new THREE.CircleGeometry(0.24, 40).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#c79a62', transparent: true, opacity: 0, depthWrite: false })); bloom.position.y = BED + 0.004; g.add(bloom);
+  const ripple = new THREE.Mesh(new THREE.RingGeometry(0.022, 0.034, 24).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#f1dcb6', transparent: true, opacity: 0, depthWrite: false })); ripple.position.y = BED + 0.008; g.add(ripple);
+  // the boiler: copper, with its thermometer reading ninety-four, feeding the arm through a pipe
+  const boiler = lathe([[0, 0], [0.23, 0], [0.26, 0.04], [0.26, 0.4], [0.2, 0.5], [0.07, 0.55], [0.07, 0.6], [0, 0.6]], 56, copper); boiler.position.set(1.06, S0, -0.02); g.add(boiler);
+  [0.06, 0.38].forEach((y) => { const band = new THREE.Mesh(new THREE.TorusGeometry(0.262, 0.012, 8, 56), brass); band.rotation.x = Math.PI / 2; band.position.set(1.06, S0 + y, -0.02); g.add(band); });
+  const gc = document.createElement('canvas'); gc.width = gc.height = 128;
+  const gg = gc.getContext('2d');
+  gg.fillStyle = '#f7efdf'; gg.beginPath(); gg.arc(64, 64, 62, 0, Math.PI * 2); gg.fill();
+  gg.strokeStyle = '#3a2a1e'; gg.lineWidth = 3;
+  for (let k = 0; k <= 10; k++) { const a = Math.PI * 0.75 + (k / 10) * Math.PI * 1.5; gg.beginPath(); gg.moveTo(64 + Math.cos(a) * 50, 64 + Math.sin(a) * 50); gg.lineTo(64 + Math.cos(a) * (k % 5 ? 56 : 59), 64 + Math.sin(a) * (k % 5 ? 56 : 59)); gg.stroke(); }
+  gg.fillStyle = '#3a2a1e'; gg.font = '600 22px Georgia, serif'; gg.textAlign = 'center'; gg.fillText('94', 64, 100); gg.font = '13px Georgia, serif'; gg.fillText('°C', 64, 40);
+  const na = Math.PI * 0.75 + 0.94 * Math.PI * 1.5; gg.strokeStyle = '#b8322c'; gg.lineWidth = 4; gg.lineCap = 'round'; gg.beginPath(); gg.moveTo(64, 64); gg.lineTo(64 + Math.cos(na) * 44, 64 + Math.sin(na) * 44); gg.stroke();
+  gg.fillStyle = '#3a2a1e'; gg.beginPath(); gg.arc(64, 64, 5, 0, Math.PI * 2); gg.fill();
+  const dial = new THREE.Mesh(new THREE.CircleGeometry(0.1, 40), new THREE.MeshBasicMaterial({ map: finish(new THREE.CanvasTexture(gc)) })); dial.position.set(1.06, S0 + 0.24, 0.247); g.add(dial);
+  const bezel = new THREE.Mesh(new THREE.TorusGeometry(0.103, 0.012, 8, 40), brass); bezel.position.copy(dial.position); g.add(bezel);
+  const knob = new THREE.Mesh(new THREE.SphereGeometry(0.035, 16, 12), brass); knob.position.set(1.06, S0 + 0.63, -0.02); g.add(knob);
+  const HEAD = 2.2;
+  const pipe = new THREE.CatmullRomCurve3([new THREE.Vector3(1.06, S0 + 0.56, -0.02), new THREE.Vector3(1.08, 2.1, -0.12), new THREE.Vector3(0.9, 2.4, -0.24), new THREE.Vector3(0.62, 2.42, -0.3), new THREE.Vector3(0.28, 2.42, -0.14), new THREE.Vector3(0.04, 2.38, -0.01), new THREE.Vector3(0, HEAD + 0.06, 0)]);
+  g.add(new THREE.Mesh(new THREE.TubeGeometry(pipe, 64, 0.022, 10, false), copper));
+  // the pouring head turns, so its off-centre spout draws the slow spiral over the grounds
+  const head = new THREE.Group(); head.position.set(0, HEAD, 0); g.add(head);
+  const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.1, 20), brass); hub.position.y = 0.01; head.add(hub);
+  const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.018, 32), brass); plate.position.y = -0.05; head.add(plate);
+  const spout = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.01, 0.06, 10), brass); spout.position.set(0.1, -0.09, 0); head.add(spout);
+  g.userData.head = head;
+  const water = new THREE.MeshBasicMaterial({ color: '#dff1f6', transparent: true, opacity: 0.8 });
+  const streamTop = HEAD - 0.12, streamLen = streamTop - BED;
+  const stream = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.012, streamLen, 8), water); stream.visible = false; g.add(stream);
+  Object.assign(g.userData, { stream, streamTop, streamLen, ripple, bloom, bed, bedY: BED });
+  // what falls from the dripper into the server
+  const drip = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.007, 1, 6), new THREE.MeshBasicMaterial({ color: '#5a2c12' })); drip.visible = false; g.add(drip);
+  g.userData.drip = drip; g.userData.dripTop = DY;
+  const steam = points(tier === 'lite' ? 30 : 60, 0.34, '#ffffff', 0.08, softDot());
+  const sp = steam.geometry.attributes.position; for (let i = 0; i < sp.count; i++) sp.setXYZ(i, between(-0.28, 0.28), between(BED + 0.1, BED + 1.0), between(-0.28, 0.28));
+  g.add(steam); g.userData.steam = steam; g.userData.steamBase = BED + 0.05;
+
+  // ---- on the bar beside it ----
+  // a gooseneck kettle, set down
+  const kettle = new THREE.Group(); kettle.position.set(-1.55, TOP, 0.3); kettle.rotation.y = 0.5; g.add(kettle);
+  kettle.add(lathe([[0, 0], [0.3, 0], [0.33, 0.04], [0.3, 0.3], [0.2, 0.44], [0.16, 0.46], [0, 0.46]], 56, steel));
+  const kLid = lathe([[0, 0], [0.17, 0], [0.15, 0.04], [0.04, 0.06], [0, 0.06]], 32, steel); kLid.position.y = 0.46; kettle.add(kLid);
+  const kKnob = new THREE.Mesh(new THREE.SphereGeometry(0.03, 12, 10), timber); kKnob.position.y = 0.54; kettle.add(kKnob);
+  kettle.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(0.28, 0.08, 0), new THREE.Vector3(0.46, 0.2, 0), new THREE.Vector3(0.5, 0.42, 0), new THREE.Vector3(0.62, 0.56, 0), new THREE.Vector3(0.72, 0.53, 0)]), 32, 0.02, 8, false), steel));
+  kettle.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(-0.2, 0.42, 0), new THREE.Vector3(-0.39, 0.46, 0), new THREE.Vector3(-0.46, 0.3, 0), new THREE.Vector3(-0.4, 0.15, 0), new THREE.Vector3(-0.31, 0.1, 0)]), 28, 0.022, 8, false), cel({ color: '#3a2a20', roughness: 0.5 })));
+  // a jar of beans, two cups waiting, a little of the day's grind on a brass scoop
+  const jar = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.46, 28, 1, true), jarGlass); jar.position.set(1.72, TOP + 0.23, -0.66); g.add(jar);
+  const jarLid = new THREE.Mesh(new THREE.CylinderGeometry(0.215, 0.215, 0.05, 28), timber); jarLid.position.set(1.72, TOP + 0.485, -0.66); g.add(jarLid);
+  const jarBeans = instanced(ellipsoidGeo(0.05), cel({ color: '#4a2814', roughness: 0.7 }), 120);
+  for (let i = 0; i < 120; i++) { const a = rnd() * 6.28, r = Math.sqrt(rnd()) * 0.17; dummy.position.set(1.72 + Math.cos(a) * r, TOP + 0.04 + rnd() * 0.34, -0.66 + Math.sin(a) * r); dummy.rotation.set(rnd() * 3, rnd() * 3, 0); dummy.scale.setScalar(1); dummy.updateMatrix(); jarBeans.setMatrixAt(i, dummy.matrix); }
   g.add(jarBeans);
-  const lamp = new THREE.PointLight('#ffd9ae', 6, 8, 1.8); lamp.position.set(-0.6, 2.8, 1.2); g.add(lamp);
-  const fill = new THREE.PointLight('#ffe6cc', 2.2, 5, 1.8); fill.position.set(0.8, 1.2, 2.2); g.add(fill);
-  g.add(practical(-0.6, 2.8, 1.2, '#ffd9ae', 2.6));
+  houseCup(g, 2.15, TOP, 0.45, 0.62); houseCup(g, 2.62, TOP, -0.2, 0.62).rotation.y = 2.2;
+  const loose = instanced(ellipsoidGeo(0.045), cel({ color: '#4a2814', roughness: 0.7 }), 16);
+  for (let i = 0; i < 16; i++) { dummy.position.set(between(-0.6, 0.0) - 0.55, TOP + 0.02, between(0.45, 0.95)); dummy.rotation.set(0, rnd() * 6.28, between(-0.3, 0.3)); dummy.scale.setScalar(between(0.9, 1.2)); dummy.updateMatrix(); loose.setMatrixAt(i, dummy.matrix); }
+  g.add(loose);
   return g;
 }
 
@@ -870,15 +1143,48 @@ function practical(x, y, z, color, haloSize) {
 
 function buildCup(tier) {
   const g = new THREE.Group();
-  g.add(new THREE.Mesh(new THREE.PlaneGeometry(30, 30).rotateX(-Math.PI / 2), cel({ color: '#0c0806', roughness: 1, rim: 0 })));
-  const table = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.6, 0.06, 96), cel({ map: woodTex([1.6, 1.6]), color: '#7a5038', rim: 0 })); table.position.y = 0.77; g.add(table);
-  const ceramic = cel({ color: '#f3ece2', roughness: 0.3, side: THREE.DoubleSide });
-  const saucer = new THREE.Mesh(new THREE.LatheGeometry([[0, 0], [0.26, 0], [0.5, 0.04], [0.55, 0.07], [0.53, 0.08], [0.26, 0.025], [0, 0.025]].map(([x, y]) => new THREE.Vector2(x, y)), 96), ceramic); saucer.position.y = 0.8; g.add(saucer);
-  const cup = new THREE.Mesh(new THREE.LatheGeometry([[0, 0], [0.24, 0], [0.27, 0.03], [0.33, 0.2], [0.36, 0.32], [0.34, 0.32], [0.31, 0.2], [0.25, 0.04], [0, 0.04]].map(([x, y]) => new THREE.Vector2(x, y)), 96), ceramic); cup.position.y = 0.84; g.add(cup);
-  const handle = new THREE.Mesh(new THREE.TorusGeometry(0.085, 0.026, 14, 40, Math.PI), ceramic); handle.position.set(0.31, 1.0, 0); handle.rotation.set(0, 0, -Math.PI / 2); g.add(handle);
-  // crema surface
-  const crema = new THREE.Mesh(new THREE.CircleGeometry(0.315, 96).rotateX(-Math.PI / 2), new THREE.ShaderMaterial({
-    uniforms: THREE.UniformsUtils.merge([THREE.UniformsLib.fog, { uTime: { value: 0 }, uP: { value: 0 } }]), fog: true,
+  // the table by the window, in a corner of the tasting room
+  const BACK = -3.5, TT = 0.83;
+  room(g, { w: 12, d: 15.6, h: 4.8, zc: 4.3, floor: cel({ map: woodTex([5, 6.5], { hue: 30, sat: 26, light: 38 }), rim: 0 }), wall: cel({ map: plasterTex([4, 2]), rim: 0 }) });
+  const timber = cel({ color: '#6a4c38', rim: 0 }), green = cel({ color: '#35544c', rim: 0 }), stileMat = cel({ color: '#2b463f', rim: 0 });
+  const brass = cel({ color: '#cda65c', metalness: 0.9, roughness: 0.25 }), ceramic = cel({ color: '#f4ecdf', roughness: 0.35, side: THREE.DoubleSide });
+  // panelling to the height of a chair back on the two walls in view
+  [[0, BACK + 0.02, 0, 12], [-5.98, 4.3, Math.PI / 2, 15.6]].forEach(([x, z, ry, len]) => {
+    const run = new THREE.Group(); run.position.set(x, 0, z); run.rotation.y = ry; g.add(run);
+    const board = new THREE.Mesh(new THREE.BoxGeometry(len, 1.16, 0.04), green); board.position.y = 0.58; run.add(board);
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(len, 0.07, 0.09), timber); rail.position.set(0, 1.19, 0.02); run.add(rail);
+    for (let at = -len / 2 + 0.6; at < len / 2; at += 1.2) { const stile = new THREE.Mesh(new THREE.BoxGeometry(0.07, 1.0, 0.02), stileMat); stile.position.set(at, 0.6, 0.03); run.add(stile); }
+  });
+  const win = { x: -2.4, y: 2.5, z: BACK, w: 2.4, h: 2.3, dir: [1.8, -2.245, 3.6] };
+  daylight(g, { ...win, land: TT, shaft: 0.075, pool: 0 });
+  // a sideboard under the house's print, with the four coffees and a seedling on it
+  const board = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.84, 0.5), green); board.position.set(0.7, 0.42, BACK + 0.29); g.add(board);
+  const boardTop = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.05, 0.56), cel({ map: woodTex([1.6, 0.4], { hue: 22, sat: 34, light: 27 }), rim: 0 })); boardTop.position.set(0.7, 0.865, BACK + 0.3); g.add(boardTop);
+  [['#9fb7b1', -0.1], ['#e0b35b', 0.24], ['#c04a4a', 0.58], ['#e8dcc8', 0.92]].forEach(([hue, x]) => { const bag = new THREE.Mesh(new THREE.BoxGeometry(0.27, 0.42, 0.13), cel({ color: hue })); bag.position.set(x, 1.1, BACK + 0.26); bag.rotation.y = between(-0.2, 0.2); g.add(bag); });
+  const pot = lathe([[0, 0], [0.1, 0], [0.14, 0.2], [0.15, 0.22], [0.12, 0.22], [0.1, 0.18], [0, 0.18]], 24, cel({ color: '#b5653c', side: THREE.DoubleSide })); pot.position.set(1.55, 0.89, BACK + 0.3); g.add(pot);
+  const leafMat = cel({ map: leafTex(), alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.85 });
+  const frond = (parent, x, y, z, ry, rz, len = 0.3) => { const leaf = new THREE.Mesh(new THREE.PlaneGeometry(len, len * 0.48), leafMat); leaf.geometry.translate(len / 2, 0, 0); leaf.position.set(x, y, z); leaf.rotation.set(0, ry, rz, 'YZX'); parent.add(leaf); return leaf; };
+  g.add(rod([1.55, 1.07, BACK + 0.3], [1.55, 1.5, BACK + 0.3], 0.008, timber));
+  for (let k = 0; k < 7; k++) frond(g, 1.55, 1.14 + k * 0.055, BACK + 0.3, k * 2.4, 0.25 + (k % 3) * 0.12, 0.28 - k * 0.012);
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.94, 0.05), timber); frame.position.set(0.7, 2.35, BACK + 0.03); g.add(frame);
+  const paper = new THREE.Mesh(new THREE.PlaneGeometry(2.14, 0.78), new THREE.MeshBasicMaterial({ color: '#efe5d2' })); paper.position.set(0.7, 2.35, BACK + 0.058); g.add(paper);
+  const print = cupArt().clone(); print.repeat.set(0.4, 1); print.offset.set(0.3, 0); print.needsUpdate = true;
+  const picture = new THREE.Mesh(new THREE.PlaneGeometry(2.14, 0.78), new THREE.MeshBasicMaterial({ map: print, transparent: true })); picture.position.set(0.7, 2.35, BACK + 0.062); g.add(picture);
+
+  // the table: boards under a brass band, on a turned pedestal
+  const top = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.7, 0.07, 96), [cel({ color: '#5a3a26', rim: 0 }), cel({ map: tableTex(), rim: 0 }), cel({ color: '#5a3a26', rim: 0 })]); top.position.y = TT - 0.035; g.add(top);
+  const band = new THREE.Mesh(new THREE.TorusGeometry(1.7, 0.016, 8, 96), brass); band.rotation.x = Math.PI / 2; band.position.y = TT - 0.012; g.add(band);
+  const leg = lathe([[0, 0], [0.5, 0], [0.52, 0.03], [0.16, 0.07], [0.09, 0.2], [0.08, 0.6], [0.13, 0.7], [0.2, 0.76]], 32, cel({ color: '#3a2a20', roughness: 0.5 })); g.add(leg);
+  sunPanes(g, win, { x: 0, z: 0, w: 3.36, d: 3.36, y: TT, round: true, opacity: 0.2 });
+
+  // the cup: the name toward the visitor, the handle to their right
+  const cupG = houseCup(g, 0, TT, 0); cupG.rotation.y = 0.75;
+  restShadow(g, 0, TT + 0.005, 0, 0.86, 0.5);
+  /* The coffee's surface. A rosetta poured into the crema: fronds laid from the far side toward the drinker,
+   * then the cut drawn back through them. It is poured as the visitor comes to the table (uP), and the
+   * surface never quite holds still (uTime). */
+  const crema = new THREE.Mesh(new THREE.CircleGeometry(0.327, 96).rotateX(-Math.PI / 2), new THREE.ShaderMaterial({
+    uniforms: THREE.UniformsUtils.merge([THREE.UniformsLib.fog, { uTime: { value: 0 }, uP: { value: 1 } }]), fog: true,
     vertexShader: `varying vec2 vUv;
       #include <fog_pars_vertex>
       void main(){ vUv = uv - 0.5; vec4 mvPosition = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * mvPosition;
@@ -886,30 +1192,107 @@ function buildCup(tier) {
       }`,
     fragmentShader: `uniform float uTime; uniform float uP; varying vec2 vUv;
       #include <fog_pars_fragment>
-      void main(){ float r = length(vUv)*2.0; float a = atan(vUv.y, vUv.x);
-        float sw = sin(r*34.0 - a*1.5 + uTime*0.2 + sin(a*4.0 + r*9.0 + uTime*0.08)*1.1)*0.5+0.5;
-        float fine = sin(r*90.0 + a*7.0 - uTime*0.15)*0.5+0.5;
-        float rim = smoothstep(0.84, 1.0, r);
-        vec3 crema = vec3(0.80,0.60,0.34); vec3 dark = vec3(0.30,0.16,0.07); vec3 edge = vec3(0.62,0.42,0.22);
-        float v = (0.35 + sw*0.3 + fine*0.12) * 5.0; v = (floor(v) + smoothstep(0.42, 0.58, fract(v))) / 5.0;
-        vec3 c = mix(dark, crema, v); c = mix(c, edge, rim);
-        float spec = pow(max(0.0, 1.0 - length(vUv - vec2(0.18,-0.22))*4.0), 6.0)*0.35;
-        gl_FragColor = vec4(pow(c + spec, vec3(2.2)), 1.0);
+      float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float vnoise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y); }
+      float fbm(vec2 p){ float v = 0.0, a = 0.5; for (int k = 0; k < 4; k++) { v += a * vnoise(p); p = p * 2.03 + 11.7; a *= 0.5; } return v; }
+      void main(){
+        vec2 p = vUv * 2.0; float r = length(p);                       // the surface as a unit disc; +y is the far side of the cup
+        vec2 w = vec2(fbm(p * 2.6 + vec2(uTime * 0.045, 0.0)), fbm(p * 2.6 + vec2(5.2, -uTime * 0.04))) - 0.5;
+        vec2 q = p + 0.05 * w;
+        q.x -= 0.05 * sin(q.y * 2.4 + 0.5);                              // the lean of a leaf poured by hand
+        float y = q.y, x = abs(q.x);
+        // crema: three browns that drift, darker toward the wall of the cup
+        float tone = fbm(q * 3.2 + 3.0 * w + vec2(0.0, uTime * 0.02));
+        vec3 c = mix(vec3(0.66, 0.41, 0.19), vec3(0.76, 0.51, 0.26), smoothstep(0.44, 0.47, tone));
+        c = mix(c, vec3(0.85, 0.62, 0.35), smoothstep(0.60, 0.63, tone));
+        c = mix(c, vec3(0.50, 0.29, 0.13), smoothstep(0.78, 0.93, r) * 0.85);
+        // the leaf: an outline that is round at the far end and comes to a point at the near one,
+        // and fronds that sweep back from the stem
+        float u = clamp((y + 0.74) / 1.36, 0.0, 1.0);
+        float W = 0.56 * pow(u, 0.75) * sqrt(max(0.0, 1.0 - pow(max(0.0, (u - 0.7) / 0.3), 2.0)));
+        float t = y + 0.62 * x + 0.5 * x * x;                            // constant along one frond
+        float k = x / max(W, 0.001);
+        float gap = mix(-0.55, 0.3, k * k);                              // fronds narrow toward their tips
+        float foam = smoothstep(gap, gap + 0.24, cos(t * 6.2831853 * 6.6));
+        foam = max(foam, smoothstep(0.455, 0.475, t));                   // the first pour: the crown round the far end
+        foam *= (1.0 - smoothstep(0.86, 1.0, k)) * step(0.002, W);
+        float poured = smoothstep(0.03, 0.4, uP), cut = smoothstep(0.36, 0.52, uP);
+        float front = mix(0.82, -0.98, poured);
+        foam *= smoothstep(front - 0.03, front + 0.03, t);
+        float cutTo = mix(-0.92, 0.72, cut);
+        float stem = (1.0 - smoothstep(0.008, 0.018, x)) * (1.0 - smoothstep(cutTo - 0.03, cutTo, y));
+        foam *= 1.0 - stem * step(-0.72, y);
+        foam = max(foam, stem * (1.0 - step(-0.72, y)) * step(-0.86, y));   // where the cut began
+        c = mix(c, vec3(0.86, 0.66, 0.40), smoothstep(0.0, 0.12, foam) * 0.9);
+        c = mix(c, vec3(0.94, 0.80, 0.58), smoothstep(0.18, 0.34, foam));
+        c = mix(c, vec3(0.99, 0.95, 0.86), smoothstep(0.52, 0.7, foam));
+        // fine bubbles against the wall, and the bright line where the coffee climbs it
+        vec2 cellAt = vec2(atan(p.y, p.x) / 6.2831853 * 126.0, r * 22.0), id = floor(cellAt);
+        float size = 0.16 + 0.26 * hash(id), d = length(fract(cellAt) - 0.5 + (vec2(hash(id + 3.1), hash(id + 7.7)) - 0.5) * 0.3);
+        float ringed = smoothstep(0.76, 0.82, r) * (1.0 - smoothstep(0.94, 0.97, r)) * step(0.4, hash(id + 1.3));
+        c = mix(c, vec3(0.90, 0.72, 0.46), ringed * (1.0 - smoothstep(size - 0.05, size, d)) * 0.75);
+        c = mix(c, vec3(0.42, 0.24, 0.10), ringed * smoothstep(size - 0.07, size - 0.02, d) * (1.0 - smoothstep(size, size + 0.06, d)) * 0.7);
+        c = mix(c, vec3(0.95, 0.80, 0.56), smoothstep(0.955, 0.975, r) * 0.9);
+        // the window's light: a crescent lying along the far wall of the cup, and a dot beside it
+        float ang = atan(p.y, -p.x);                                       // 0 toward -x
+        float glint = (1.0 - smoothstep(0.016, 0.026, abs(r - 0.845))) * (1.0 - smoothstep(0.42, 0.5, abs(ang - 0.62)));
+        glint = max(glint, 1.0 - smoothstep(0.022, 0.032, length(p - vec2(-0.5, 0.69))));
+        c = mix(c, vec3(1.0, 0.97, 0.9), glint * 0.62);
+        gl_FragColor = vec4(pow(c, vec3(2.2)), 1.0);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
         #include <fog_fragment>
       }`,
   }));
-  crema.position.y = 0.84 + 0.29; g.add(crema); g.userData.crema = crema;
-  const steam = points(tier === 'lite' ? 26 : 50, 0.3, '#ffffff', 0.07, softDot());
-  const sp = steam.geometry.attributes.position; for (let i = 0; i < sp.count; i++) sp.setXYZ(i, between(-0.15, 0.15), between(1.2, 2.0), between(-0.15, 0.15));
-  g.add(steam); g.userData.steam = steam;
-  const spot = new THREE.SpotLight('#ffe3bd', 24, 9, 0.55, 0.7, 1.6); spot.position.set(0.4, 4.2, 0.8); spot.target.position.set(0, 0.9, 0); g.add(spot); g.add(spot.target);
-  g.add(practical(0.4, 3.3, 0.8, '#ffe3bd', 3.2));
-  // a few beans on the table
-  const beans = instanced(ellipsoidGeo(0.022), cel({ color: '#3a2112', roughness: 0.7 }), 14);
-  for (let i = 0; i < 14; i++) { const a = rnd() * 6.28, r = between(0.75, 1.3); dummy.position.set(Math.cos(a) * r, 0.83, Math.sin(a) * r); dummy.rotation.set(0, rnd() * 6, 0); dummy.scale.setScalar(1); dummy.updateMatrix(); beans.setMatrixAt(i, dummy.matrix); }
+  crema.position.y = 0.33; cupG.add(crema); g.userData.crema = crema;
+  // on the saucer, as the house serves it: a leaf, a few beans, a gilt spoon
+  const onSaucer = (r) => 0.036 + Math.max(0, r - 0.3) * 0.19;
+  const sLeaf = frond(cupG, -0.2, 0.088, 0.3, 0, 0, 0.36); sLeaf.rotation.set(-Math.PI / 2 + 0.1, 3.45, 0, 'YXZ');
+  const beanMat = cel({ color: '#4a2814', roughness: 0.7 });
+  [[-0.25, 0.43, 0.4], [-0.14, 0.47, 2.1], [-0.2, 0.36, 1.2], [-0.33, 0.37, 2.8]].forEach(([x, z, ry]) => { const bean = new THREE.Mesh(ellipsoidGeo(0.04), beanMat); bean.position.set(x, onSaucer(Math.hypot(x, z)) + 0.022, z); bean.rotation.y = ry; cupG.add(bean); });
+  const spoon = new THREE.Group(); spoon.position.set(0.15, 0.082, 0.45); spoon.rotation.set(0, -0.32, 0.06); cupG.add(spoon);
+  const bowl = new THREE.Mesh(new THREE.SphereGeometry(0.05, 20, 12), brass); bowl.scale.set(1.25, 0.26, 0.85); spoon.add(bowl);
+  spoon.add(rod([0.05, 0.003, 0], [0.4, 0.016, 0], 0.008, brass));
+  const spoonEnd = new THREE.Mesh(new THREE.SphereGeometry(0.016, 12, 8), brass); spoonEnd.scale.set(1.8, 0.6, 1); spoonEnd.position.set(0.4, 0.016, 0); spoon.add(spoonEnd);
+  const steam = points(tier === 'lite' ? 26 : 50, 0.3, '#ffffff', 0.1, softDot());
+  const sp = steam.geometry.attributes.position; for (let i = 0; i < sp.count; i++) sp.setXYZ(i, between(-0.16, 0.16), between(TT + 0.4, TT + 1.25), between(-0.16, 0.16));
+  g.add(steam); g.userData.steam = steam; g.userData.steamBase = TT + 0.38;
+
+  // what else is on the table: the server it was brewed into, a sprig from the farm, the house's card, a napkin
+  const { s: server, coffee } = glassServer(); server.position.set(-1.2, TT, 0.2); server.rotation.y = 2.3; server.scale.setScalar(0.9); coffee.scale.y = 0.45; coffee.position.y = 0.02 + 0.24 * 0.45 / 2; g.add(server);
+  restShadow(g, -1.2, TT + 0.005, 0.2, 0.5);
+  const vase = lathe([[0, 0], [0.07, 0], [0.1, 0.05], [0.1, 0.14], [0.045, 0.24], [0.04, 0.3], [0.05, 0.31]], 32, green.clone()); vase.material.side = THREE.DoubleSide; vase.position.set(-0.35, TT, -0.95); g.add(vase);
+  restShadow(g, -0.35, TT + 0.005, -0.95, 0.24);
+  const sprig = new THREE.Group(); sprig.position.set(-0.35, TT + 0.3, -0.95); sprig.rotation.z = -0.2; g.add(sprig);
+  sprig.add(rod([0, -0.2, 0], [0, 0.52, 0], 0.008, timber));
+  for (let k = 0; k < 8; k++) frond(sprig, 0, 0.08 + (k >> 1) * 0.13, 0, (k % 2) * Math.PI + (k >> 1) * 0.6, 0.35, 0.3 - (k >> 1) * 0.02);
+  const cherries = instanced(new THREE.SphereGeometry(0.03, 12, 10), cel({ color: '#c8322c', roughness: 0.3 }), 7);
+  for (let k = 0; k < 7; k++) { const a = k * 0.9; dummy.position.set(Math.cos(a) * 0.035, 0.2 + (k % 3) * 0.035, Math.sin(a) * 0.035); dummy.rotation.set(0, 0, 0); dummy.scale.setScalar(k % 2 ? 1 : 0.85); dummy.updateMatrix(); cherries.setMatrixAt(k, dummy.matrix); }
+  sprig.add(cherries);
+  const linenEdge = cel({ color: '#e6dcc8', rim: 0 });
+  const cc = document.createElement('canvas'); cc.width = 400; cc.height = 256;
+  const c2 = cc.getContext('2d'); c2.fillStyle = '#f7efdf'; c2.fillRect(0, 0, 400, 256);
+  c2.strokeStyle = '#c59a4e'; c2.lineWidth = 3; c2.strokeRect(14, 14, 372, 228); c2.lineWidth = 1; c2.strokeRect(22, 22, 356, 212);
+  c2.strokeStyle = c2.fillStyle = '#4b392b'; c2.lineWidth = 3; c2.lineJoin = 'round'; c2.beginPath(); c2.moveTo(150, 84); c2.lineTo(184, 62); c2.lineTo(196, 71); c2.lineTo(212, 56); c2.lineTo(250, 84); c2.stroke();
+  c2.textAlign = 'center'; c2.font = '500 46px Georgia, "Times New Roman", serif'; 'YORAI'.split('').forEach((ch, k) => c2.fillText(ch, 200 + (k - 2) * 48, 146));
+  c2.font = '13px Georgia, "Times New Roman", serif'; 'CAFÉ DE COSTA RICA'.split('').forEach((ch, k, all) => c2.fillText(ch, 200 + (k - (all.length - 1) / 2) * 11.5, 180));
+  const card = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.32).rotateX(-Math.PI / 2), cel({ map: finish(new THREE.CanvasTexture(cc)), rim: 0 })); card.position.set(0.86, TT + 0.006, -0.2); card.rotation.y = 0.5; g.add(card);
+  const napkin = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.014, 0.5), [linenEdge, linenEdge, cel({ map: napkinTex(), rim: 0 }), linenEdge, linenEdge, linenEdge]); napkin.position.set(0.34, TT + 0.007, -1.05); napkin.rotation.y = 0.5; g.add(napkin);
+  const beans = instanced(ellipsoidGeo(0.04), beanMat, 12);
+  for (let i = 0; i < 12; i++) { const a = rnd() * 6.28, r = Math.sqrt(rnd()) * 0.34; dummy.position.set(0.72 + Math.cos(a) * r, TT + 0.022, 0.62 + Math.sin(a) * r); dummy.rotation.set(0, rnd() * 6.28, 0); dummy.scale.setScalar(between(0.9, 1.15)); dummy.updateMatrix(); beans.setMatrixAt(i, dummy.matrix); }
   g.add(beans);
+  // a chair pulled out on the far side
+  const chair = new THREE.Group(); chair.position.set(-2.15, 0, 0.75); chair.rotation.y = Math.PI / 2 - 0.3; g.add(chair);
+  const dark = cel({ color: '#3a2a20', roughness: 0.5 });
+  const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.04, 28), dark); seat.position.y = 0.5; chair.add(seat);
+  [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => chair.add(rod([sx * 0.17, 0.48, sz * 0.17], [sx * 0.21, 0, sz * 0.21], 0.018, dark)));
+  [[0.22, 1.02, 0.018], [0.13, 0.9, 0.012]].forEach(([half, peak, thick]) => chair.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(-half * 0.9, 0.5, -0.2), new THREE.Vector3(-half, peak - 0.17, -0.27), new THREE.Vector3(0, peak, -0.3), new THREE.Vector3(half, peak - 0.17, -0.27), new THREE.Vector3(half * 0.9, 0.5, -0.2)]), 24, thick, 8, false), dark)));
+
+  // light: a lamp over the table, and the window's
+  g.add(practical(0.2, 3.5, 0.3, '#ffe2b4', 1.6));
+  const tableLight = new THREE.PointLight('#ffe9c8', 7, 12, 1.5); tableLight.position.set(0.3, 3.2, 0.9); g.add(tableLight);
+  const windowLight = new THREE.PointLight('#fff2d8', 6, 10, 1.5); windowLight.position.set(-2.2, 2.4, -2.5); g.add(windowLight);
   return g;
 }
 
@@ -1221,14 +1604,17 @@ export function mount({ host, jr, stage, state, onState, emit, explicit, jtFromY
    * at a pose and never kinks into a new direction. The rounding stays within a few units of the
    * authored path, so no prop is clipped that the straight path would not have clipped. */
   const dolly = (t) => t - 0.35 * Math.sin(Math.PI * 2 * t) / (Math.PI * 2);
+  // a pose's pan moves the camera and what it looks at together, so the picture slides without turning
+  const NO_PAN = [0, 0];
+  const panOf = (c) => { if (!c.pan) return NO_PAN; if (camera.aspect < 1) return c.pan.tall; const k = 1 - clamp((camera.aspect - 1.25) / 0.35, 0, 1); return [c.pan.narrow[0] * k, c.pan.narrow[1] * k]; };
   function polyline(jt, outPos, outLook) {
     jt = clamp(jt, 0, 6);
     const i = Math.min(5, Math.floor(jt)); const p = jt - i;
     const c = CAM[i]; const cross = c.cross ?? 0.28, s = 1 - cross;
     if (p < s || i === 5) {
-      const t = i === 5 ? dolly(clamp(p, 0, 1)) : dolly(p / s);
-      outPos.set(lerp(c.a[0], c.b[0], t), lerp(c.a[1], c.b[1], t), lerp(c.a[2], c.b[2], t) + Z[i]);
-      outLook.set(lerp(c.al[0], c.bl[0], t), lerp(c.al[1], c.bl[1], t), lerp(c.al[2], c.bl[2], t) + Z[i]);
+      const t = i === 5 ? dolly(clamp(p, 0, 1)) : dolly(p / s), [px, pz] = panOf(c);
+      outPos.set(lerp(c.a[0], c.b[0] + px, t), lerp(c.a[1], c.b[1], t), lerp(c.a[2], c.b[2] + pz, t) + Z[i]);
+      outLook.set(lerp(c.al[0], c.bl[0] + px, t), lerp(c.al[1], c.bl[1], t), lerp(c.al[2], c.bl[2] + pz, t) + Z[i]);
     } else {
       // the crossing: on toward the next place, easing away and easing in, rising through the mist at its middle
       const n = CAM[i + 1]; const t = (p - s) / cross, te = lerp(t, t * t * (3 - 2 * t), 0.7), up = Math.sin(Math.PI * t) * (c.lift ?? 4);
@@ -1248,7 +1634,8 @@ export function mount({ host, jr, stage, state, onState, emit, explicit, jtFromY
   function atmosphere(jt) {
     const i = Math.min(5, Math.floor(jt)); const p = jt - i;
     const j = Math.min(5, i + 1);
-    const t = i === 5 ? 0 : smoothstep(p, 0.6, 1.0); // blend towards the next chapter in the fog
+    // blend towards the next chapter in the fog; out of the roastery the dark holds until the mist is total, and the daylight comes up beyond it
+    const t = i === 5 ? 0 : smoothstep(p, CAM[i].late ? 0.9 : 0.6, 1.0);
     const A = PAL[i], B = PAL[j];
     // the light changes within a chapter too: the plantation's morning burns off (fog thins, sun
     // strengthens); the roast's fire is lit; the pour's lamp warms as the coffee rises
@@ -1366,19 +1753,32 @@ export function mount({ host, jr, stage, state, onState, emit, explicit, jtFromY
       u.daylight.forEach(([m, o]) => { if (m.isLight) m.intensity = o * day; else m.opacity = o * day; });
     }
     if (groups[4].visible && groups[4].userData.stream) {
-      const u = groups[4].userData; const bp = i === 4 ? p : i > 4 ? 1 : 0;
-      const pouring = smoothstep(bp, 0.12, 0.2) * (1 - smoothstep(bp, 0.72, 0.8));
-      u.stream.scale.y = Math.max(0.001, pouring); u.stream.position.y = 1.9 - 0.15 * pouring;
-      u.coffee.scale.y = Math.max(0.001, smoothstep(bp, 0.18, 0.85)); u.coffee.position.y = 0.8 + 0.17 * u.coffee.scale.y;
-      u.bed.position.y = 1.6 + 0.04 * Math.sin(Math.min(1, bp / 0.3) * Math.PI);
+      const u = groups[4].userData, bp = i === 4 ? p : i > 4 ? 1 : 0;
+      const pouring = smoothstep(bp, 0.1, 0.18) * (1 - smoothstep(bp, 0.7, 0.8));
+      // the head turns, so the water lands in a slow circle on the grounds
+      const turn = time * 0.9 + bp * 18, sx = 0.1 * Math.cos(turn), sz = -0.1 * Math.sin(turn);
+      u.head.rotation.y = turn;
+      u.stream.visible = pouring > 0.01; u.stream.scale.y = Math.max(0.001, pouring); u.stream.position.set(sx, u.streamTop - u.streamLen * pouring / 2, sz);
+      // the grounds swell and bloom where it lands
+      const swell = smoothstep(bp, 0.1, 0.34), beat = (time * 1.7) % 1;
+      u.bed.position.y = u.bedY + 0.03 * Math.sin(Math.min(1, bp / 0.34) * Math.PI);
+      u.bloom.position.y = u.bed.position.y + 0.004; u.bloom.scale.setScalar(0.35 + 0.65 * swell); u.bloom.material.opacity = 0.5 * swell * (1 - 0.6 * smoothstep(bp, 0.72, 0.92));
+      u.ripple.position.set(sx, u.bed.position.y + 0.008, sz); u.ripple.scale.setScalar(1 + beat * 2.4); u.ripple.material.opacity = 0.75 * (1 - beat) * pouring * pouring;
+      // and the coffee falls into the server, which fills
+      const level = smoothstep(bp, 0.18, 0.86), dripping = smoothstep(bp, 0.15, 0.2) * (1 - smoothstep(bp, 0.84, 0.92));
+      u.coffee.scale.y = Math.max(0.001, level); u.coffee.position.y = u.coffeeBase + u.coffeeH * level / 2;
+      const surface = u.serverY + u.coffeeBase + u.coffeeH * level;
+      u.drip.visible = dripping > 0.01; u.drip.scale.set(0.6 + 0.4 * dripping, u.dripTop - surface, 0.6 + 0.4 * dripping); u.drip.position.y = (u.dripTop + surface) / 2;
       const st = u.steam.geometry.attributes.position;
-      for (let k = 0; k < st.count; k++) { let y = st.getY(k) + dt * 0.35; if (y > 2.7) y = 1.7; st.setY(k, y); st.setX(k, st.getX(k) + Math.sin(time * 1.3 + k) * dt * 0.08); }
-      st.needsUpdate = true; u.steam.material.opacity = 0.09 * pouring + 0.03;
+      for (let k = 0; k < st.count; k++) { let y = st.getY(k) + dt * 0.35; if (y > u.steamBase + 1.0) y = u.steamBase; st.setY(k, y); st.setX(k, st.getX(k) + Math.sin(time * 1.3 + k) * dt * 0.08); }
+      st.needsUpdate = true; u.steam.material.opacity = 0.12 * pouring + 0.04;
+      u.pane.material.opacity = i === 4 ? 1 - smoothstep(p, 0.765, 0.8) : 0;   // the window opens onto the mist, and the way on is through it
     }
     if (groups[5].visible && groups[5].userData.crema) {
-      const u = groups[5].userData; u.crema.material.uniforms.uTime.value = time;
+      const u = groups[5].userData, un = u.crema.material.uniforms;
+      un.uTime.value = time; un.uP.value = i === 5 ? p : 0;
       const st = u.steam.geometry.attributes.position;
-      for (let k = 0; k < st.count; k++) { let y = st.getY(k) + dt * 0.28; if (y > 2.1) y = 1.15; st.setY(k, y); st.setX(k, st.getX(k) + Math.sin(time * 1.1 + k) * dt * 0.05); }
+      for (let k = 0; k < st.count; k++) { let y = st.getY(k) + dt * 0.28; if (y > u.steamBase + 0.9) y = u.steamBase; st.setY(k, y); st.setX(k, st.getX(k) + Math.sin(time * 1.1 + k) * dt * 0.05); }
       st.needsUpdate = true;
     }
   }

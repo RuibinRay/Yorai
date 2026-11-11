@@ -1,4 +1,4 @@
-import { REGIONS } from '../data/content.js?v=6';
+import { REGIONS } from '../data/content.js?v=7';
 
 /* A simplified outline of Costa Rica (lon, lat), clockwise from the north-west.
  * Hand-traced at roughly 15–30 km fidelity; for an atlas-grade coast, replace with
