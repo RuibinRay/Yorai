@@ -1,3 +1,14 @@
+# Test results — 2026-11-11, products, cart and checkout
+
+Lab: headless Chromium, as below. Real browser: the Claude desktop browser pane on an Apple M2.
+
+- tests/contrast.mjs: 20/20 (tokens unchanged).
+- tests/probe.mjs: 95/95 checks, 0 console errors. Twenty-six are new and walk the shop: all 17 pictures in use; a bag opens its panel; arrows and arrow keys move between bags; size and quantity set the price; adding is confirmed and counted; the cart opens with the line, its stepper keeps focus, checkout validates and writes the order out, the last line removed shows the empty cart, Escape closes it and focus returns; a card's quick add; the gift box opens on four bags and adds one of each; the cart survives a reload; the method filter alone and together with the process filter; compare takes three and refuses a fourth, and sets notes out by family; a coffee's panel, Take it home, and Book a tasting filling the contact form.
+- tests/axe.mjs: 0 violations in 42 states (fourteen new: bag panel, cart, checkout with errors, opened gift box, coffee panel, compare bar and compare dialog, each at 1440 and 390 px).
+- Scripted walkthrough with screenshots at 1440×900 and 390×844: no horizontal overflow; the panel's confirmation fits without scrolling on a laptop; three compared coffees fit a phone without sideways scroll.
+- Real browser: tilt, zoom and highlight follow the pointer on a bag; clicking the card opens the panel without moving the page; the original picture is served to the panel on a 2× display.
+- Not tested: touch devices in hand, Safari and Firefox, a real email client receiving the order (the lab cannot open one).
+
 # Test results — 2026-11-10, scenery pass (volcano, field, crossings, room and yard detail)
 
 Lab: headless Chromium with SwiftShader, as below. Real GPU: the Claude desktop browser pane on an Apple M2 (ANGLE Metal).

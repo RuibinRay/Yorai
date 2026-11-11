@@ -68,45 +68,80 @@ export const CHAPTERS = [
 
 export const PROCESSES = ['All', 'Washed', 'Honey', 'Natural', 'Anaerobic'];
 
-/* The cupping table (menu). Prices in USD for the demo; PLACEHOLDER. */
+export const METHODS = ['All', 'Pour-over', 'Espresso', 'Cold'];
+
+/* The cupping table (menu). Prices in USD for the demo; PLACEHOLDER.
+ * `img` is the picture's path without its ending (js/ui.js adds the size and `.webp`); `bag` names the
+ * bag in the collection that the same lot is sold in, where there is one. */
 export const MENU = [
-  { name: 'Finca La Neblina', process: 'Washed', variety: 'Caturra', altitude: 1750, notes: 'Lime, white honey, jasmine', price: 6.5, method: 'Pour-over' },
-  { name: 'Lote Cerro Alto', process: 'Honey', variety: 'Catuaí', altitude: 1850, notes: 'Red apple, panela, orange blossom', price: 7, method: 'Pour-over' },
-  { name: 'Los Cedros', process: 'Natural', variety: 'Villa Sarchí', altitude: 1700, notes: 'Strawberry, cacao nib, rum', price: 7.5, method: 'Pour-over' },
-  { name: 'Geisha de Altura', process: 'Washed', variety: 'Geisha', altitude: 1900, notes: 'Bergamot, peach, black tea', price: 12, method: 'Pour-over' },
-  { name: 'Aurora', process: 'Anaerobic', variety: 'Catuaí', altitude: 1800, notes: 'Cinnamon, dark cherry, cream', price: 8.5, method: 'Pour-over' },
-  { name: 'Espresso de la casa', process: 'Honey', variety: 'Caturra · Catuaí', altitude: 1750, notes: 'Toffee, hazelnut, red fruit', price: 4, method: 'Espresso' },
-  { name: 'Cortado', process: 'Honey', variety: 'Caturra · Catuaí', altitude: 1750, notes: 'Milk chocolate, brown sugar', price: 4.5, method: 'Espresso' },
-  { name: 'Cold brew de montaña', process: 'Natural', variety: 'Villa Sarchí', altitude: 1700, notes: 'Cherry cola, cacao, long finish', price: 6, method: 'Cold' },
+  { id: 'finca-la-neblina', name: 'Finca La Neblina', process: 'Washed', variety: 'Caturra', altitude: 1750, notes: 'Lime, white honey, jasmine', price: 6.5, method: 'Pour-over', img: 'assets/menu/neblina', bag: 'neblina' },
+  { id: 'lote-cerro-alto', name: 'Lote Cerro Alto', process: 'Honey', variety: 'Catuaí', altitude: 1850, notes: 'Red apple, panela, orange blossom', price: 7, method: 'Pour-over', img: 'assets/menu/cerro-alto', bag: 'cerro-alto' },
+  { id: 'los-cedros', name: 'Los Cedros', process: 'Natural', variety: 'Villa Sarchí', altitude: 1700, notes: 'Strawberry, cacao nib, rum', price: 7.5, method: 'Pour-over', img: 'assets/menu/cedros', bag: 'cedros' },
+  { id: 'geisha-de-altura', name: 'Geisha de Altura', process: 'Washed', variety: 'Geisha', altitude: 1900, notes: 'Bergamot, peach, black tea', price: 12, method: 'Pour-over', img: 'assets/menu/geisha', bag: 'geisha' },
+  { id: 'aurora', name: 'Aurora', process: 'Anaerobic', variety: 'Catuaí', altitude: 1800, notes: 'Cinnamon, dark cherry, cream', price: 8.5, method: 'Pour-over', img: 'assets/menu/aurora' },
+  { id: 'espresso-de-la-casa', name: 'Espresso de la casa', process: 'Honey', variety: 'Caturra · Catuaí', altitude: 1750, notes: 'Toffee, hazelnut, red fruit', price: 4, method: 'Espresso', img: 'assets/menu/espresso' },
+  { id: 'cortado', name: 'Cortado', process: 'Honey', variety: 'Caturra · Catuaí', altitude: 1750, notes: 'Milk chocolate, brown sugar', price: 4.5, method: 'Espresso', img: 'assets/menu/cortado' },
+  { id: 'cold-brew', name: 'Cold brew de montaña', process: 'Natural', variety: 'Villa Sarchí', altitude: 1700, notes: 'Cherry cola, cacao, long finish', price: 6, method: 'Cold', img: 'assets/menu/cold-brew' },
 ];
 
-/* The collection (bags). Sizes in grams; prices USD; PLACEHOLDER. */
+/* What the menu's own introduction says about each way of brewing, shown in a coffee's detail panel. */
+export const METHOD_NOTES = {
+  'Pour-over': 'Brewed to order at 94 °C.',
+  Espresso: 'A honey-process blend of two lots.',
+};
+
+/* Families for the tasting notes above, used when coffees are compared side by side. Every note on the
+ * menu belongs to exactly one family; add a new note here when one is added there. */
+export const FLAVOURS = {
+  Citrus: ['lime', 'bergamot'],
+  Floral: ['jasmine', 'orange blossom'],
+  Fruit: ['red apple', 'strawberry', 'peach', 'dark cherry', 'red fruit', 'cherry cola'],
+  Sweet: ['white honey', 'panela', 'toffee', 'brown sugar'],
+  Cocoa: ['cacao nib', 'milk chocolate', 'cacao'],
+  'Spice and nut': ['cinnamon', 'hazelnut'],
+  'Tea and spirit': ['black tea', 'rum'],
+  Texture: ['cream', 'long finish'],
+};
+
+/* The collection (bags). Sizes in grams; prices USD; PLACEHOLDER. `img` as in MENU. */
 export const COLLECTION = [
   {
-    id: 'neblina', name: 'La Neblina', process: 'Washed', region: 'Tarrazú', variety: 'Caturra', altitude: '1,750 m',
+    id: 'neblina', img: 'assets/products/bag-neblina', name: 'La Neblina', process: 'Washed', region: 'Tarrazú', variety: 'Caturra', altitude: '1,750 m',
     notes: 'Lime, white honey, jasmine', roast: 'Light', hue: '#9fb7b1', ink: '#143229',
     story: 'The estate lot. Picked from the north-facing rows that keep the cloud longest.',
     sizes: [{ g: 250, price: 22 }, { g: 500, price: 40 }, { g: 1000, price: 74 }],
   },
   {
-    id: 'cerro-alto', name: 'Cerro Alto', process: 'Honey', region: 'Tarrazú', variety: 'Catuaí', altitude: '1,850 m',
+    id: 'cerro-alto', img: 'assets/products/bag-cerro-alto', name: 'Cerro Alto', process: 'Honey', region: 'Tarrazú', variety: 'Catuaí', altitude: '1,850 m',
     notes: 'Red apple, panela, orange blossom', roast: 'Light–medium', hue: '#e0b35b', ink: '#3b2508',
     story: 'Yellow-honey process: half the mucilage stays on the bean through drying, which gives the sweetness its depth.',
     sizes: [{ g: 250, price: 24 }, { g: 500, price: 44 }, { g: 1000, price: 82 }],
   },
   {
-    id: 'cedros', name: 'Los Cedros', process: 'Natural', region: 'Tarrazú', variety: 'Villa Sarchí', altitude: '1,700 m',
+    id: 'cedros', img: 'assets/products/bag-cedros', name: 'Los Cedros', process: 'Natural', region: 'Tarrazú', variety: 'Villa Sarchí', altitude: '1,700 m',
     notes: 'Strawberry, cacao nib, rum', roast: 'Medium', hue: '#c04a4a', ink: '#2c0b0b',
     story: 'Dried whole in the cherry for three weeks. The fruit comes through the cup like a preserve.',
     sizes: [{ g: 250, price: 26 }, { g: 500, price: 48 }],
   },
   {
-    id: 'geisha', name: 'Geisha de Altura', process: 'Washed', region: 'Tarrazú', variety: 'Geisha', altitude: '1,900 m',
+    id: 'geisha', img: 'assets/products/bag-geisha', name: 'Geisha de Altura', process: 'Washed', region: 'Tarrazú', variety: 'Geisha', altitude: '1,900 m',
     notes: 'Bergamot, peach, black tea', roast: 'Light', hue: '#e8dcc8', ink: '#2a2118',
     story: 'Our highest parcel, 300 trees, one harvest a year. Released in numbered 150 g boxes.',
     sizes: [{ g: 150, price: 48 }],
   },
 ];
+
+/* The gift box: the four bags of the collection in one box. It has no price of its own in this data, so
+ * the page offers the four bags at their smallest size and an enquiry about the box itself. */
+export const GIFT = {
+  name: 'Colección de Origen',
+  empty: 'assets/products/box-empty',
+  full: 'assets/products/box-full',
+  includes: ['neblina', 'cerro-alto', 'cedros', 'geisha'],
+};
+
+/* Pictures used as accents: a roasted bean, the house cup, the paper cup. */
+export const ART = { bean: 'assets/products/bean', cup: 'assets/products/cup-house', togo: 'assets/products/cup-togo' };
 
 /* Coffee regions of Costa Rica, as pins on the map (lon, lat). `nudge` is a small display offset in map
  * units so that clustered pins keep a clear 24 px target; it does not change the region's position in the text. Elevations and harvest windows

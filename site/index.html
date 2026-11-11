@@ -26,12 +26,12 @@
       } catch (e) {}
     })();
   </script>
-  <link rel="stylesheet" href="css/tokens.css?v=5">
-  <link rel="stylesheet" href="css/site.css?v=5">
+  <link rel="stylesheet" href="css/tokens.css?v=6">
+  <link rel="stylesheet" href="css/site.css?v=6">
   <script type="importmap">{ "imports": { "three": "./vendor/three.module.js" } }</script>
   <script src="vendor/gsap.min.js" defer></script>
   <script src="vendor/ScrollTrigger.min.js" defer></script>
-  <script type="module" src="js/main.js?v=5"></script>
+  <script type="module" src="js/main.js?v=6"></script>
 </head>
 <body>
   <a class="skip" href="#menu">Skip the journey, go to the menu</a>
@@ -50,6 +50,10 @@
       <a href="#contact">Contact</a>
     </nav>
     <div class="hdr__tools">
+      <button class="hdr__cart" id="cartOpen" type="button" aria-haspopup="dialog" aria-controls="cartDlg">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 8h14l-1.2 12H6.2L5 8Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <span class="vh">Cart, </span><span class="hdr__count" id="cartCount">0</span><span class="vh" id="cartCountWord"> items</span>
+      </button>
       <button class="hdr__motion" id="motionToggle" type="button" aria-pressed="true" title="Motion on or off">
         <span class="hdr__dot" aria-hidden="true"></span><span>Motion</span>
       </button>
@@ -125,6 +129,7 @@
 
     <!-- ================= MENU ================= -->
     <section class="sec sec--paper on-paper cup" id="menu" aria-labelledby="menuTitle">
+      <div class="cup__hero" id="cupHero" aria-hidden="true"></div>
       <div class="sec__head">
         <p class="kicker rv">VII · The cupping table</p>
         <h2 id="menuTitle" class="rv">Eight coffees, brewed to order</h2>
@@ -132,6 +137,10 @@
       </div>
       <div class="cup__grid">
         <div class="cup__aside rv">
+          <div>
+            <p class="kicker">Filter by method</p>
+            <div class="cup__filters" id="cupMethods" role="group" aria-label="Filter by method"></div>
+          </div>
           <div>
             <p class="kicker">Filter by process</p>
             <div class="cup__filters" id="cupFilters" role="group" aria-label="Filter by process"></div>
@@ -141,7 +150,14 @@
         </div>
         <div>
           <ul class="cup__list" id="cupList"></ul>
-          <p class="cup__empty" id="cupEmpty" hidden>Nothing from that process is on the table this week.</p>
+          <p class="cup__empty" id="cupEmpty" hidden>Nothing brewed that way from that process is on the table this week.</p>
+          <div class="cmp" id="cmpBar" hidden>
+            <p id="cmpText" role="status"></p>
+            <div class="cmp__actions">
+              <button class="btn" type="button" id="cmpOpen">Compare</button>
+              <button class="btn btn--ghost" type="button" id="cmpClear">Clear</button>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -154,7 +170,88 @@
         <p class="rv">Roasted on Mondays and shipped the same week. Reserve a bag and we confirm by email with the roast date before anything is charged.</p>
       </div>
       <div class="col__row" id="colRow"></div>
+      <div class="box rv" id="giftBox"></div>
     </section>
+
+    <!-- A bag or a coffee, in detail -->
+    <dialog class="pd" id="productDlg" aria-labelledby="pdName">
+      <div class="pd__in">
+        <button class="pd__close" type="button" id="pdClose" aria-label="Close">✕</button>
+        <div class="pd__stage" id="pdStage">
+          <div class="pd__art tilt" id="pdArt"></div>
+          <div class="pd__nav" id="pdNav">
+            <button type="button" id="pdPrev" aria-label="Previous">‹</button>
+            <span id="pdPos" aria-hidden="true"></span>
+            <button type="button" id="pdNext" aria-label="Next">›</button>
+          </div>
+        </div>
+        <div class="pd__body" id="pdBody"></div>
+      </div>
+    </dialog>
+
+    <!-- Coffees from the menu, side by side -->
+    <dialog class="dlg cmp-dlg on-paper" id="cmpDlg" aria-labelledby="cmpTitle">
+      <div class="dlg__in">
+        <div class="dlg__head">
+          <div>
+            <p class="kicker">Compare</p>
+            <h3 id="cmpTitle">Side by side</h3>
+          </div>
+          <button class="dlg__close" type="button" id="cmpClose" aria-label="Close">✕</button>
+        </div>
+        <div class="cmp__scroll" id="cmpGrid" tabindex="0" role="region" aria-labelledby="cmpTitle"></div>
+      </div>
+    </dialog>
+
+    <!-- The cart, and the checkout that sends it by email -->
+    <dialog class="cart on-paper" id="cartDlg" aria-labelledby="cartTitle">
+      <div class="cart__in">
+        <div class="dlg__head">
+          <div>
+            <p class="kicker">Your order</p>
+            <h3 id="cartTitle">Cart</h3>
+          </div>
+          <button class="dlg__close" type="button" id="cartClose" aria-label="Close">✕</button>
+        </div>
+        <div class="cart__view" id="cartItemsView">
+          <ul class="cart__list" id="cartList"></ul>
+          <div class="cart__empty" id="cartEmpty" hidden>
+            <div class="cart__empty-art" id="cartEmptyArt" aria-hidden="true"></div>
+            <p>Your cart is empty.</p>
+            <button class="btn btn--ghost" type="button" id="cartBrowse">See the collection</button>
+          </div>
+          <div class="cart__foot" id="cartFoot">
+            <p class="cart__total"><span>Subtotal</span><b id="cartTotal"></b></p>
+            <p class="frm__fine">We confirm by email with the roast date before anything is charged.</p>
+            <button class="btn" type="button" id="cartCheckout">Checkout</button>
+          </div>
+        </div>
+        <form class="frm cart__view" id="checkoutForm" novalidate hidden>
+          <button class="cart__back" type="button" id="checkoutBack">Back to the cart</button>
+          <ol class="cart__summary" id="checkoutSummary"></ol>
+          <div class="frm__row">
+            <label for="oName">Name</label>
+            <input id="oName" name="name" autocomplete="name" required>
+            <p class="frm__err" id="oNameErr" aria-live="polite"></p>
+          </div>
+          <div class="frm__row">
+            <label for="oEmail">Email</label>
+            <input id="oEmail" name="email" type="email" autocomplete="email" required>
+            <p class="frm__err" id="oEmailErr" aria-live="polite"></p>
+          </div>
+          <div class="frm__row">
+            <label for="oNote">Note, if you have one</label>
+            <textarea id="oNote" name="note"></textarea>
+          </div>
+          <div class="frm__actions">
+            <button class="btn" type="submit">Send order</button>
+            <button class="btn btn--ghost" type="button" id="checkoutCopy">Copy summary</button>
+          </div>
+          <p class="frm__status" id="checkoutStatus" aria-live="polite"></p>
+          <p class="frm__fine">Sending opens your email app with the order written out. Nothing is charged until we confirm.</p>
+        </form>
+      </div>
+    </dialog>
 
     <dialog class="dlg on-paper" id="reserveDlg" aria-labelledby="reserveTitle">
       <div class="dlg__in">

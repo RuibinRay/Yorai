@@ -18,7 +18,17 @@ Every asset path in the site is relative, so it works at the `/Yorai/` sub-path 
 
 Everything a visitor reads lives in `site/data/content.js`: chapter copy, menu, collection, story, regions, contact details. Brand facts marked `PLACEHOLDER` are invented for the demo and must be replaced before launch. The scroll length of each chapter is `length` (in vh) in `CHAPTERS`.
 
-When you change any JS or CSS, bump the `?v=5` query on every import in `index.html` and the `js/*.js` imports at once (search for `?v=`), or browsers will mix old and new modules.
+When you change any JS or CSS, bump the `?v=6` query on every import in `index.html` and the `js/*.js` imports at once (search for `?v=`), or browsers will mix old and new modules.
+
+## Products, cart and checkout
+
+- **Pictures.** The 17 supplied transparent pictures live in `site/assets/products/` (the four bags, the empty and the full gift box, a bean, the house cup, the paper cup) and `site/assets/menu/` (one cup per coffee on the menu). Each is kept exactly as supplied (`name.webp`) beside a smaller copy (`name-640.webp`, `-800` for the boxes, `-256` for the bean); `picture()` in `js/ui.js` writes the `srcset`, so grids take the small copy and the detail panel the original. To replace a picture, keep both file names.
+- **Collection.** Each bag card opens a detail panel (`js/product.js`): the larger picture, the lot's story, tasting notes, facts, a size and quantity choice with the price, **Add to cart** and **Reserve by email** (the original reservation form). The arrows, or the arrow keys, walk through the four bags.
+- **Gift box.** The empty box opens on the full one and lists its four bags (`GIFT` in `data/content.js`). The box has no price of its own in the data, so the page offers the four bags at their smallest size and an email enquiry about the box.
+- **Menu.** Eight cards with the cup pictures; two sets of filters (method and process) that work together; **Compare** takes up to three coffees and sets their tasting notes out by family (`FLAVOURS` in `data/content.js`) with method, process, variety, altitude and price. A coffee's panel offers **Book a tasting** (it fills the contact form) and, where the same lot is sold in a bag (`bag` in `MENU`), the way to that bag.
+- **Cart and checkout** (`js/cart.js`). The cart holds bags only, is kept on the device under `yorai:cart`, and opens from the header. Checkout asks for a name, an email and an optional note, then sends the order the way a reservation is sent: written out in the visitor's email app, or copied. **No payment is taken on this page.** Wiring a real payment provider would replace the `submit` handler in `initCart`.
+- **Motion.** Pictures tilt toward a fine pointer, float gently, zoom on hover and carry a soft highlight (`tilt()` in `js/ui.js`, `.tilt` / `.floaty` in the stylesheet). None of it runs on touch, under calm motion or with reduced motion.
+- **Before launch:** the bag pictures are printed "340 g", while `COLLECTION` sells 250 g, 500 g and 1000 g (and the Geisha in 150 g boxes). Change one or the other so they agree.
 
 ## Motion, quality tiers and diagnostics
 
@@ -59,8 +69,10 @@ site/
   js/menu.js, collection.js, story.js, origins.js, contact.js, forms.js, settings.js
   js/ui.js              animated dialog close, reveal stagger indices
   js/look.js            the Look panel: style and detail options, stored under the `yorai:` prefix
+  js/product.js         the detail panel for a bag or a coffee
+  js/cart.js            the cart and its email checkout
   vendor/               three.module.js (minified, MIT), gsap.min.js + ScrollTrigger.min.js (GSAP licence)
   fonts/                Newsreader Variable (OFL), Hanken Grotesk Variable (OFL)
-  assets/               favicon.svg, og.jpg
+  assets/               favicon.svg, og.jpg, products/ and menu/ (the product pictures)
 tests/                  probe, axe, contrast, og scripts (dev only)
 ```

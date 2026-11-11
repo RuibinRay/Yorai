@@ -40,3 +40,10 @@
 - **`flatShading` warned on the toon material** → `MeshToonMaterial` does not declare it → an unindexed icosphere already gives each face its own normal, so the boulders are flat without it.
 - **A redeclared `back` broke the roastery build** → the drum already had a `back` plate when the room got a back wall → name scenery by what it is (`backWall`), and run `node --check` after every patch.
 
+## Hit during the products and cart pass (2026-11-11)
+
+- **The "Added to cart" line was below the fold** → the panel's text column was sized like a poster (a 6 rem name, large story type), so the confirmation fell off a laptop screen → the place where feedback appears is part of the layout: size the column so the whole purchase, confirmation included, is visible at 900 px high.
+- **Three compared coffees scrolled sideways on a phone** → a table with a comfortable minimum column width → on a phone drop the minimum, narrow the label column and the type, and let the notes wrap.
+- **Porcelain on paper disappears** → cream cups on the cream menu section → each cup sits on a dark tile, which also ties the menu to the collection.
+- **The bag pictures say 340 g and the data sells 250 g** → pictures and data came from different places → flagged in the README for the owner; the page keeps the data it had.
+

@@ -1,4 +1,5 @@
-/* axe-core at every chapter, every section, and with the reserve dialog, the nav sheet and the look panel open. */
+/* axe-core at every chapter, every section, and with every dialog and panel open: reserve, nav sheet, look,
+ * the product detail (a bag and a coffee), the cart and its checkout, compare, and the opened gift box. */
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -23,6 +24,18 @@ for (const [w, h] of [[1440, 900], [390, 844]]) {
   for (const id of ['menu', 'collection', 'story', 'origins', 'contact']) { await page.evaluate((id) => document.getElementById(id).scrollIntoView({ behavior: 'instant' }), id); await page.waitForTimeout(1300); await run(id); }
   await page.click('[data-reserve="neblina"]'); await page.waitForTimeout(200); await run('reserve dialog open'); await page.keyboard.press('Escape');
   if (w < 900) { await page.click('#menuOpen'); await page.waitForTimeout(200); await run('nav sheet open'); await page.keyboard.press('Escape'); }
+  // the shop's states
+  const at = async (sel) => { await page.evaluate((s) => document.querySelector(s).scrollIntoView({ behavior: 'instant', block: 'center' }), sel); await page.waitForTimeout(1300); };
+  await at('#colRow'); await page.click('#colRow [data-open="neblina"]'); await page.waitForTimeout(700); await run('bag detail open');
+  await page.click('#pdBuy button[type=submit]'); await page.click('.pd__link'); await page.waitForTimeout(700); await run('cart open');
+  await page.click('#cartCheckout'); await page.click('#checkoutForm button[type=submit]'); await page.waitForTimeout(400); await run('checkout with errors');
+  await page.keyboard.press('Escape'); await page.waitForTimeout(500);
+  await at('#giftBox'); await page.click('#boxToggle'); await page.waitForTimeout(1200); await run('gift box open');
+  await at('#cupList'); await page.click('#cupList [data-open="geisha-de-altura"]'); await page.waitForTimeout(700); await run('coffee detail open');
+  await page.keyboard.press('Escape'); await page.waitForTimeout(500);
+  await page.click('[data-compare="aurora"]'); await page.click('[data-compare="cortado"]'); await run('compare bar shown');
+  await page.click('#cmpOpen'); await page.waitForTimeout(600); await run('compare open');
+  await page.keyboard.press('Escape'); await page.waitForTimeout(400);
   // the look panel belongs to the live scene; on this still tier it is shown by hand so its markup and contrast are checked
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' })); await page.waitForTimeout(400);
   await page.evaluate(() => { const b = document.getElementById('lookBtn'); b.hidden = false; b.click(); }); await page.waitForTimeout(400); await run('look panel open');
