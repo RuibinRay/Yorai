@@ -2,10 +2,10 @@
  * that tilts and floats, everything the data says about it, and the action that fits: a bag can be put in
  * the cart or reserved by email; a coffee from the menu is served in the tasting room, so it offers a
  * tasting enquiry and, where the same lot is sold in a bag, the way to that bag. */
-import { COLLECTION, MENU, METHOD_NOTES } from '../data/content.js?v=6';
-import { cart } from './cart.js?v=6';
-import { isCalm } from './settings.js?v=6';
-import { closeDialog, picture, SHAPE, tilt, money, capital, notesOf } from './ui.js?v=6';
+import { COLLECTION, MENU, METHOD_NOTES } from '../data/content.js?v=7';
+import { cart } from './cart.js?v=7';
+import { isCalm } from './settings.js?v=7';
+import { closeDialog, picture, SHAPE, tilt, money, capital, notesOf } from './ui.js?v=7';
 
 const $ = (id) => document.getElementById(id);
 const bagOf = (id) => COLLECTION.find((b) => b.id === id);

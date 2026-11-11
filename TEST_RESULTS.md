@@ -1,3 +1,15 @@
+# Test results — 2026-11-10, the pour and the cup (brighter rooms, the brewing station, the cup and its table)
+
+Lab: headless Chromium with SwiftShader, as below. Real GPU: the Claude desktop browser pane on an Apple M2 (ANGLE Metal).
+
+- tests/contrast.mjs: 20/20 (tokens unchanged). tests/probe.mjs: 95/95 checks, 0 console errors. tests/axe.mjs: 0 violations in 42 states.
+- Frame sheets through `renderAt` at 1440×900: the pour from arrival to its last pose (4.0–4.77), the way out through the window (4.77–4.86), the cup from arrival to the shot from above (5.0–5.9), the rosetta being poured (5.12, 5.24, 5.36, 5.5), and the crossing out of the roastery (3.76–4.0: dark until the mist closes, daylight beyond it). No GL errors, no console warnings.
+- All four looks (Anime, Pastel, Manga, Film) at 4.5 and 5.8.
+- Page screenshots with the words over the scene at 1440×900, 1024×768 and 390×844 (lite tier): the words sit on dark ground in both chapters, and the last shot is framed for each shape.
+- The words' contrast against the rendered scene, measured from pixels behind each line (axe cannot see through a canvas): body text 9–14:1, headings 6.7–9.8:1 in the two chapters, equal to or better than the outdoor chapters under the same scrim.
+- Real GPU (2048×1536 buffer, full tier), synchronous per-frame time with a read-back: the pour 10.7–11.7 ms and the cup 11.3–11.7 ms, against 10.9 ms for the roastery and 16.7 ms for the plantation in the same run. No GL errors.
+- Not measured: phone GPUs, Safari and Firefox, touch.
+
 # Test results — 2026-11-11, products, cart and checkout
 
 Lab: headless Chromium, as below. Real browser: the Claude desktop browser pane on an Apple M2.

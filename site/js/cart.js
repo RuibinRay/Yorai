@@ -1,10 +1,10 @@
 /* The cart: bags from the collection, kept on the visitor's device, and a checkout that sends the order
  * the way a reservation is sent — written out in the visitor's email app, or copied. No payment is taken
  * on this page; the farm confirms by email before anything is charged. */
-import { COLLECTION, BRAND, ART } from '../data/content.js?v=6';
-import * as settings from './settings.js?v=6';
-import { validate, isEmail, mailto, copyText } from './forms.js?v=6';
-import { closeDialog, picture, SHAPE } from './ui.js?v=6';
+import { COLLECTION, BRAND, ART } from '../data/content.js?v=7';
+import * as settings from './settings.js?v=7';
+import { validate, isEmail, mailto, copyText } from './forms.js?v=7';
+import { closeDialog, picture, SHAPE } from './ui.js?v=7';
 
 const MAX = 12; // the most of one bag in an order, as in the reservation form
 const bagOf = (id) => COLLECTION.find((b) => b.id === id);

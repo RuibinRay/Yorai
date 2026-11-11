@@ -47,3 +47,14 @@
 - **Porcelain on paper disappears** → cream cups on the cream menu section → each cup sits on a dark tile, which also ties the menu to the collection.
 - **The bag pictures say 340 g and the data sells 250 g** → pictures and data came from different places → flagged in the README for the owner; the page keeps the data it had.
 
+
+
+## Hit during the pour and cup pass (2026-11-10)
+
+- **A patch cut sixty lines out of the file** → it sliced from an anchor line to a later marker, and a helper inserted earlier in the same script had just added a second copy of that anchor line above the first → make edits to existing code before inserting new code that repeats its lines, and count an anchor's occurrences at the moment it is used.
+- **The brighter rooms washed out** → three point lights and the bloom on top of a brighter sky and sun; cream porcelain and glass lost their form → in a daylit room the hemisphere light and the sun carry it: point lights at a third, bloom down, and judge by whether white objects still show their shading.
+- **Wood turned orange** → board tones chosen for a dark room, under warm light and a saturating grade → `woodTex` takes hue, saturation and lightness; tones are chosen under the light they will be seen in.
+- **Coffee looked grey through the glass** → glass at 30 % opacity over a dark liquid → 13 %; the ink outline carries the glass's shape.
+- **A wall went by at the start of a crossing** → the old rooms were dark, so flying through a back wall did not show; a bright room shows it, and fog cannot hide a surface the camera is about to touch (the fog factor falls to nothing with distance) → the way out is an opening (the window, whose pane opens onto the mist), and a dark room keeps its own palette until the mist has closed (`late`).
+- **The words landed on bright props** → a jar, a napkin and the saucer sat in the corner where the chapter's copy is → compose for the words: that corner holds dark things, and the last pose pans by screen shape (`pan`).
+

@@ -1,6 +1,6 @@
-import { MENU, PROCESSES, METHODS, FLAVOURS, ART } from '../data/content.js?v=6';
-import { closeDialog, picture, SHAPE, tilt, money, capital, notesOf } from './ui.js?v=6';
-import { openProduct } from './product.js?v=6';
+import { MENU, PROCESSES, METHODS, FLAVOURS, ART } from '../data/content.js?v=7';
+import { closeDialog, picture, SHAPE, tilt, money, capital, notesOf } from './ui.js?v=7';
+import { openProduct } from './product.js?v=7';
 
 const MOST = 3; // coffees side by side
 const cupOf = (id) => MENU.find((m) => m.id === id);
