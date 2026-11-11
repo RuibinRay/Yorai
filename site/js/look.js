@@ -1,6 +1,6 @@
 /* The visitor's choice of look and detail for the journey: a small panel beside the pause button.
  * It only sets state.look / state.detail and remembers them; journey3d.js applies them live. */
-import * as settings from './settings.js?v=5';
+import * as settings from './settings.js?v=6';
 
 export const LOOKS = [
   { id: 'anime', label: 'Anime', hint: 'Cel shading, ink lines and painted skies.' },

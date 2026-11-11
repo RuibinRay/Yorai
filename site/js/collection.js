@@ -1,51 +1,43 @@
-import { COLLECTION, BRAND } from '../data/content.js?v=5';
-import { validate, isEmail, mailto, copyText } from './forms.js?v=5';
-import { closeDialog } from './ui.js?v=5';
+import { COLLECTION, BRAND, GIFT, ART } from '../data/content.js?v=6';
+import { validate, isEmail, mailto, copyText } from './forms.js?v=6';
+import { closeDialog, picture, SHAPE, tilt } from './ui.js?v=6';
+import { cart } from './cart.js?v=6';
+import { openProduct, onReserve } from './product.js?v=6';
 
-/* A bag drawn in code, in the journey's cel style: one flat colour, one hard shade, one hard light, an ink line. */
-function bagSVG(b) {
-  const body = 'M36 70 Q36 52 54 50 L246 50 Q264 52 264 70 L270 390 Q270 406 254 406 L46 406 Q30 406 30 390 Z';
-  return `
-  <svg viewBox="0 0 300 420" role="img" aria-label="${b.name} bag, ${b.process} process">
-    <defs><clipPath id="clip-${b.id}"><path d="${body}"/></clipPath></defs>
-    <path d="${body}" fill="${b.hue}"/>
-    <g clip-path="url(#clip-${b.id})">
-      <path d="M208 40 C198 150 206 290 216 420 L300 420 L300 40 Z" fill="${b.ink}" opacity="0.2"/>
-      <path d="M30 374 Q150 394 270 374 L270 420 L30 420 Z" fill="${b.ink}" opacity="0.14"/>
-      <path d="M45 68 C41 160 39 280 41 394 L55 394 C52 280 54 160 59 68 Z" fill="#fff" opacity="0.34"/>
-    </g>
-    <path d="M54 50 L246 50 L240 34 Q150 22 60 34 Z" fill="${b.hue}"/>
-    <path d="M150 27 Q196 28 240 34 L246 50 L150 50 Z" fill="${b.ink}" opacity="0.16"/>
-    <path d="${body}" fill="none" stroke="${b.ink}" stroke-width="3" stroke-linejoin="round"/>
-    <path d="M54 50 L60 34 Q150 22 240 34 L246 50" fill="none" stroke="${b.ink}" stroke-width="3" stroke-linejoin="round"/>
-    <rect x="128" y="23" width="44" height="7" rx="3.5" fill="#c4985a" stroke="${b.ink}" stroke-width="2"/>
-    <g fill="${b.ink}" font-family="Hanken Grotesk Variable, Arial, sans-serif">
-      <text x="150" y="128" text-anchor="middle" font-family="Newsreader Display, Georgia, serif" font-size="44" letter-spacing="10" font-weight="500">YORAI</text>
-      <text x="150" y="150" text-anchor="middle" font-size="11" letter-spacing="3.5">CAFÉ DE ALTURA · TARRAZÚ</text>
-      <line x1="90" y1="178" x2="210" y2="178" stroke="${b.ink}" stroke-width="1" opacity="0.5"/>
-      <text x="150" y="226" text-anchor="middle" font-family="Newsreader Display, Georgia, serif" font-size="30" font-style="italic">${b.name}</text>
-      <text x="150" y="252" text-anchor="middle" font-size="12" letter-spacing="3">${b.process.toUpperCase()} · ${b.variety.toUpperCase()}</text>
-      <text x="150" y="272" text-anchor="middle" font-size="12" letter-spacing="2" opacity="0.8">${b.altitude}</text>
-      <line x1="90" y1="300" x2="210" y2="300" stroke="${b.ink}" stroke-width="1" opacity="0.5"/>
-      <text x="150" y="332" text-anchor="middle" font-size="13" font-style="italic" font-family="Newsreader Display, Georgia, serif">${b.notes}</text>
-      <text x="150" y="376" text-anchor="middle" font-size="10" letter-spacing="2.5" opacity="0.75">${b.sizes[0].g} G · ROAST: ${b.roast.toUpperCase()}</text>
-    </g>
-  </svg>`;
-}
+const bagOf = (id) => COLLECTION.find((b) => b.id === id);
 
 export function renderCollection() {
   const row = document.getElementById('colRow');
-  row.innerHTML = COLLECTION.map((b) => `
-    <article class="col__card rv" data-id="${b.id}">
-      <div class="col__bag">${bagSVG(b)}</div>
+  /* The four bags. The name is the way into the detail panel and its hit area covers the whole card;
+   * the two buttons below sit above that area. */
+  row.innerHTML = COLLECTION.map((b, i) => `
+    <article class="col__card rv" data-id="${b.id}" style="--i:${i}">
+      <div class="col__bag tilt"><div class="tilt__in"><div class="floaty">${picture(b.img, SHAPE.bag, { sizes: '(min-width: 1100px) 22vw, 45vw', alt: `${b.name}: a bag of ${b.process.toLowerCase()} ${b.variety} from ${b.region}` })}</div></div></div>
       <div>
-        <h3 class="col__name">${b.name}</h3>
+        <h3 class="col__name"><button type="button" class="col__open" data-open="${b.id}">${b.name}</button></h3>
         <p class="col__sub">${b.process} · ${b.variety} · ${b.altitude}</p>
       </div>
       <p class="col__notes">${b.notes}</p>
       <p class="col__from">From ${b.sizes[0].price} USD · ${b.sizes.map((s) => s.g + ' g').join(', ')}</p>
-      <div class="col__cta"><button class="btn btn--ghost" type="button" data-reserve="${b.id}">Reserve</button></div>
+      <div class="col__cta">
+        <button class="btn" type="button" data-add="${b.id}">Add to cart</button>
+        <button class="btn btn--ghost" type="button" data-reserve="${b.id}">Reserve</button>
+      </div>
+      <p class="col__added" role="status"></p>
     </article>`).join('');
+  row.querySelectorAll('.col__card').forEach((card) => tilt(card, card.querySelector('.tilt')));
+  row.addEventListener('click', (e) => {
+    const open = e.target.closest('[data-open]'), add = e.target.closest('[data-add]');
+    if (open) openProduct('bag', open.dataset.open, open);
+    if (add) {
+      const b = bagOf(add.dataset.add), note = add.closest('.col__card').querySelector('.col__added');
+      cart.add(b.id, b.sizes[0].g, 1);
+      note.textContent = `Added: ${b.sizes[0].g} g.`;
+      clearTimeout(note.timer); note.timer = setTimeout(() => { note.textContent = ''; }, 2600);
+    }
+  });
+
+  renderGiftBox();
 
   /* Reserve dialog */
   const dlg = document.getElementById('reserveDlg');
@@ -55,18 +47,20 @@ export function renderCollection() {
   const status = document.getElementById('reserveStatus');
   let current = null, opener = null;
 
-  row.querySelectorAll('[data-reserve]').forEach((btn) => btn.addEventListener('click', () => {
-    current = COLLECTION.find((b) => b.id === btn.dataset.reserve);
-    opener = btn;
+  function reserve(id, from) {
+    current = bagOf(id);
+    opener = from;
     title.textContent = current.name;
     sizes.innerHTML = current.sizes.map((s, i) => `
       <label><input type="radio" name="size" value="${s.g}" ${i === 0 ? 'checked' : ''}> ${s.g} g · ${s.price} USD</label>`).join('');
     status.textContent = ''; status.className = 'frm__status';
     form.reset();
     sizes.querySelector('input').checked = true;
-    btn.closest('.col__card')?.classList.add('is-open');
+    row.querySelector(`.col__card[data-id="${id}"]`)?.classList.add('is-open');
     dlg.showModal();
-  }));
+  }
+  row.querySelectorAll('[data-reserve]').forEach((btn) => btn.addEventListener('click', () => reserve(btn.dataset.reserve, btn)));
+  onReserve(reserve); // the detail panel's "Reserve by email" comes here too
   document.getElementById('reserveClose').addEventListener('click', () => closeDialog(dlg));
   dlg.addEventListener('click', (e) => { if (e.target === dlg) closeDialog(dlg); });
   dlg.addEventListener('close', () => { row.querySelectorAll('.is-open').forEach((c) => c.classList.remove('is-open')); opener?.focus(); });
@@ -102,5 +96,53 @@ export function renderCollection() {
     const ok = await copyText(summary());
     status.textContent = ok ? 'Summary copied. Paste it into an email to ' + BRAND.email + '.' : 'Copying isn’t available here; the summary is: ' + summary().replaceAll('\n', ' · ');
     status.className = 'frm__status' + (ok ? ' frm__status--ok' : '');
+  });
+}
+
+/* The gift box: closed on an empty box, opened on the four bags inside it. The box has no price of its own
+ * in the data, so the offer is the four bags at their smallest size, and an enquiry about the box. */
+function renderGiftBox() {
+  const host = document.getElementById('giftBox');
+  const bags = GIFT.includes.map(bagOf), sum = bags.reduce((n, b) => n + b.sizes[0].price, 0);
+  const bean = (n) => `<span class="box__bean box__bean--${n}" aria-hidden="true">${picture(ART.bean, SHAPE.bean, { sizes: '5rem', alt: '' })}</span>`;
+  host.innerHTML = `
+    <div class="box__stage">
+      <button class="box__lid" type="button" id="boxToggle" aria-expanded="false" aria-controls="boxContents">
+        ${picture(GIFT.empty, SHAPE.box, { sizes: '(min-width: 900px) 52vw, 92vw', cls: 'box__img box__img--empty', alt: `The ${GIFT.name} gift box, open and empty` })}
+        ${picture(GIFT.full, SHAPE.box, { sizes: '(min-width: 900px) 52vw, 92vw', cls: 'box__img box__img--full', alt: '' })}
+        <span class="box__hint" id="boxHint">Open the box</span>
+      </button>
+      ${bean(1)}${bean(2)}${bean(3)}
+    </div>
+    <div class="box__text">
+      <p class="kicker">The gift box</p>
+      <h3>${GIFT.name}</h3>
+      <p class="box__lede">Four bags, each from one slope, in one box.</p>
+      <ul class="box__list" id="boxContents" hidden>
+        ${bags.map((b, i) => `<li style="--i:${i}"><button type="button" class="box__item" data-open="${b.id}"><span class="box__thumb">${picture(b.img, SHAPE.bag, { sizes: '3rem', alt: '' })}</span><span><b>${b.name}</b><small>${b.notes}</small></span></button></li>`).join('')}
+      </ul>
+      <div class="box__actions">
+        <button class="btn" type="button" id="boxAdd">Add the four to cart · ${sum} USD</button>
+        <a class="btn btn--ghost" href="${mailto(BRAND.email, `Gift box: ${GIFT.name}`, `I’d like to ask about the ${GIFT.name} gift box.`)}">Ask about the box</a>
+      </div>
+      <p class="box__fine" id="boxFine" role="status">One of each coffee, at its smallest size.</p>
+    </div>`;
+  const toggle = host.querySelector('#boxToggle'), list = host.querySelector('#boxContents'), hint = host.querySelector('#boxHint');
+  const full = host.querySelector('.box__img--full'), emptyImg = host.querySelector('.box__img--empty');
+  tilt(host.querySelector('.box__stage'), host.querySelector('.box__stage'));
+  toggle.addEventListener('click', () => {
+    const open = !host.classList.contains('is-open');
+    host.classList.toggle('is-open', open);
+    toggle.setAttribute('aria-expanded', String(open));
+    hint.textContent = open ? 'Close the box' : 'Open the box';
+    list.hidden = !open;
+    // the picture that is showing is the one that speaks
+    full.alt = open ? `The ${GIFT.name} gift box with its four bags: ${bags.map((b) => b.name).join(', ')}` : '';
+    emptyImg.alt = open ? '' : `The ${GIFT.name} gift box, open and empty`;
+  });
+  list.addEventListener('click', (e) => { const btn = e.target.closest('[data-open]'); if (btn) openProduct('bag', btn.dataset.open, btn); });
+  host.querySelector('#boxAdd').addEventListener('click', () => {
+    bags.forEach((b) => cart.add(b.id, b.sizes[0].g, 1));
+    host.querySelector('#boxFine').textContent = 'Added: one of each coffee, at its smallest size.';
   });
 }

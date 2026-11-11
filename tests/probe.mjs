@@ -148,6 +148,87 @@ await sweep(820, 1180, 'still', 'tablet-still');
   await ctx.close();
 }
 
+/* The shop: detail panel, cart and checkout, gift box, menu filters and compare */
+{
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const page = await ctx.newPage();
+  const errs = [];
+  page.on('pageerror', (e) => errs.push(e.message));
+  page.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
+  await page.goto(`${base}?tier=still`, { waitUntil: 'networkidle' });
+  const text = (sel) => page.textContent(sel);
+  const settle = () => page.waitForTimeout(500);
+  // every supplied picture is on the page, under its own name
+  const pics = await page.evaluate(() => { const all = [...document.images].map((i) => i.getAttribute('srcset') || '').join(' '); return ['products/box-empty', 'products/box-full', 'products/bag-neblina', 'products/bag-cerro-alto', 'products/bag-cedros', 'products/bag-geisha', 'products/bean', 'products/cup-house', 'products/cup-togo', 'menu/neblina', 'menu/cerro-alto', 'menu/cedros', 'menu/geisha', 'menu/aurora', 'menu/espresso', 'menu/cortado', 'menu/cold-brew'].filter((n) => !all.includes(`assets/${n}.webp`)); });
+  check('all 17 pictures are used', pics.length === 0, pics.join(', '));
+  // collection → detail panel
+  await page.evaluate(() => document.getElementById('colRow').scrollIntoView({ block: 'center', behavior: 'instant' }));
+  await page.waitForTimeout(1500);
+  await page.click('#colRow [data-open="cerro-alto"]'); await settle();
+  check('a bag opens its detail panel', await page.evaluate(() => document.getElementById('productDlg').open) && (await text('#pdName')) === 'Cerro Alto', await text('#pdName'));
+  await page.click('#pdNext'); await settle();
+  check('the arrow moves to the next bag', (await text('#pdName')) === 'Los Cedros', await text('#pdName'));
+  await page.keyboard.press('ArrowLeft'); await settle();
+  check('the arrow keys move between bags', (await text('#pdName')) === 'Cerro Alto', await text('#pdName'));
+  await page.click('.pd__size:nth-child(2)'); await page.click('#pdBuy [data-step="1"]');
+  check('size and quantity set the price', (await text('#pdTotal')) === '88', await text('#pdTotal'));
+  await page.click('#pdBuy button[type=submit]');
+  check('adding to the cart is confirmed and counted', (await text('#pdStatus')).includes('Added: 2 × Cerro Alto, 500 g') && (await text('#cartCount')) === '2', `${await text('#pdStatus')} / ${await text('#cartCount')}`);
+  await page.click('.pd__link'); await settle();
+  check('View cart opens the cart with the line', await page.evaluate(() => document.getElementById('cartDlg').open && !document.getElementById('productDlg').open) && (await text('#cartTotal')) === '88 USD', await text('#cartTotal'));
+  await page.click('#cartList [data-step="1"]');
+  check('the cart’s stepper changes the total and keeps focus', (await text('#cartTotal')) === '132 USD' && await page.evaluate(() => document.activeElement?.dataset.step === '1'), await text('#cartTotal'));
+  await page.click('#cartCheckout');
+  await page.click('#checkoutForm button[type=submit]');
+  check('checkout validates before sending', (await text('#oNameErr')).length > 0, await text('#oNameErr'));
+  await page.fill('#oName', 'Ray'); await page.fill('#oEmail', 'ray@example.com');
+  await page.click('#checkoutCopy'); await page.waitForTimeout(200);
+  check('checkout writes the order out', (await text('#checkoutStatus')).length > 0 && await page.evaluate(() => document.getElementById('checkoutSummary').textContent.includes('Total to confirm')), (await text('#checkoutStatus')).slice(0, 80));
+  await page.click('#checkoutBack');
+  await page.click('#cartList [data-remove]');
+  check('removing the last line shows the empty cart', await page.evaluate(() => !document.getElementById('cartEmpty').hidden && document.getElementById('cartFoot').hidden) && (await text('#cartCount')) === '0');
+  await page.keyboard.press('Escape'); await settle();
+  check('Escape closes the cart', !(await page.evaluate(() => document.getElementById('cartDlg').open)));
+  // quick add, the header's cart button, and the cart surviving a reload
+  await page.click('#colRow [data-add="neblina"]');
+  check('a card’s Add to cart adds its smallest size', (await text('#cartCount')) === '1' && (await text('.col__card[data-id="neblina"] .col__added')).includes('250 g'));
+  // the gift box
+  await page.evaluate(() => document.getElementById('giftBox').scrollIntoView({ block: 'center', behavior: 'instant' }));
+  await page.waitForTimeout(1200);
+  await page.click('#boxToggle'); await settle();
+  check('the gift box opens on its four bags', await page.evaluate(() => document.getElementById('boxToggle').getAttribute('aria-expanded') === 'true' && !document.getElementById('boxContents').hidden && document.querySelectorAll('#boxContents li').length === 4));
+  await page.click('#boxAdd');
+  check('the box adds one of each coffee', (await text('#cartCount')) === '5', await text('#cartCount'));
+  await page.reload({ waitUntil: 'networkidle' });
+  check('the cart is kept across a reload', (await text('#cartCount')) === '5', await text('#cartCount'));
+  await page.click('#cartOpen'); await settle();
+  check('the header button opens the cart', await page.evaluate(() => document.getElementById('cartDlg').open && document.querySelectorAll('#cartList .cart__item').length === 4) && (await text('#cartTotal')) === '142 USD', await text('#cartTotal'));
+  await page.keyboard.press('Escape'); await settle();
+  check('focus returns to the cart button', await page.evaluate(() => document.activeElement?.id === 'cartOpen'));
+  // menu: method filter, both filters together, compare, detail
+  await page.click('#cupMethods button:has-text("Espresso")');
+  check('method filter Espresso shows 2', (await page.evaluate(() => [...document.querySelectorAll('.cup__item')].filter((li) => !li.hidden).length)) === 2 && (await text('#cupCount')).includes('2 of 8'), await text('#cupCount'));
+  await page.click('#cupFilters button:has-text("Natural")');
+  check('method and process filter together', (await page.evaluate(() => [...document.querySelectorAll('.cup__item')].filter((li) => !li.hidden).length)) === 0 && !(await page.evaluate(() => document.getElementById('cupEmpty').hidden)));
+  await page.click('#cupFilters button:has-text("All")'); await page.click('#cupMethods button:has-text("All")');
+  for (const id of ['finca-la-neblina', 'los-cedros', 'cold-brew', 'aurora']) await page.click(`[data-compare="${id}"]`);
+  check('compare takes three coffees and refuses a fourth', (await page.evaluate(() => document.querySelectorAll('.cup__item.is-compared').length)) === 3 && (await text('#cmpText')).includes('Three at most'), await text('#cmpText'));
+  await page.click('#cmpOpen'); await settle();
+  check('compare sets the notes out by family', await page.evaluate(() => document.getElementById('cmpDlg').open && document.querySelectorAll('#cmpGrid thead th').length === 3 && [...document.querySelectorAll('#cmpGrid tbody th')].some((th) => th.textContent === 'Fruit')));
+  await page.keyboard.press('Escape'); await settle();
+  await page.click('#cmpClear');
+  await page.click('#cupList [data-open="finca-la-neblina"]'); await settle();
+  check('a coffee opens its detail panel', (await text('#pdName')) === 'Finca La Neblina' && (await text('#pdBody')).includes('Brewed to order at 94 °C'), await text('#pdName'));
+  await page.click('#pdBody [data-act="bag"]'); await settle();
+  check('Take it home leads to the bag', (await text('#pdName')) === 'La Neblina' && await page.evaluate(() => !!document.getElementById('pdBuy')), await text('#pdName'));
+  await page.keyboard.press('Escape'); await settle();
+  await page.click('#cupList [data-open="aurora"]'); await settle();
+  await page.click('#pdBody [data-act="taste"]'); await settle();
+  check('Book a tasting fills the contact form', await page.evaluate(() => !document.getElementById('productDlg').open && document.getElementById('cMsg').value.includes('Aurora') && document.getElementById('cTopic').selectedIndex === 0));
+  check('no errors in the shop', errs.length === 0, errs.join(' | '));
+  await ctx.close();
+}
+
 /* The look panel: opens, switches look and detail live, remembers them, closes on Escape */
 {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
